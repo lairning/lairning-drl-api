@@ -1,4 +1,9 @@
 [[source]]
+name = 'lairning'
+url = 'https://Menda0:123456@pypi.lairning.com/simple'
+verify_ssl = true
+
+[[source]]
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -16,6 +21,7 @@ passlib = "*"
 mysql-connector-python = "*"
 pymysql = "*"
 cryptography = "*"
+lairning-core = "==1.0.9"
 
 [requires]
 python_version = "3.7"
