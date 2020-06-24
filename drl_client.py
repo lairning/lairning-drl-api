@@ -192,7 +192,7 @@ class DRLTrainer:
 
 if __name__ == "__main__":
 
-    START_TRAINER_URL = 'http://localhost:5002/drl/server/start'
+    START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
 
     start_msg = {'action_space': ACTION_SPACE,
                  'observation_space': OBSERVATION_SPACE,
@@ -232,7 +232,7 @@ if __name__ == "__main__":
         print("{} : Iteration {} - Mean Reward = {}"
               .format(datetime.now(), i, total / count))
 
-    STOP_TRAINER_URL = 'http://localhost:5002/drl/server/stop'
+    STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
     print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
 
