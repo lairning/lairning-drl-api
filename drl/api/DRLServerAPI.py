@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse
-from lairning_core import DRLServer
+#from lairning_core import DRLServer
 from flask_injector import inject
-
+from drl.api.drl_server import DRLServer
 
 class DRLServerStart(Resource):
     DECORATORS = []
