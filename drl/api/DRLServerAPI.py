@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 #from lairning_core import DRLServer
 from flask_injector import inject
 from drl.api.drl_server import DRLServer
+import json
 
 class DRLServerStart(Resource):
     DECORATORS = []
@@ -28,9 +29,9 @@ class DRLServerStart(Resource):
             raise err
 
         payload = {
-            "action_space": args.action_space,
-            "observation_space": args.observation_space,
-            "model_config": args.model_config
+            "action_space": json.loads(args.action_space),
+            "observation_space": json.loads(args.observation_space),
+            "model_config": json.loads(args.model_config)
         }
         print(payload)
         return None #self.drl_server.start_trainer(payload=payload)

@@ -12,6 +12,7 @@ import requests
 
 # import ray.cloudpickle as pickle
 import pickle
+import json
 
 MKT_TEMPLATES = {'eMail': ['mail1', 'mail2', 'mail3', 'mail4'],
                  'webDiscount': ['discount1', 'discount2', 'discount3', 'discount4'],
@@ -194,16 +195,11 @@ if __name__ == "__main__":
 
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
 
-    start_msg = {'action_space': ACTION_SPACE,
-                 'observation_space': OBSERVATION_SPACE,
-                 'model_config': dqn_config
+    start_msg = {'action_space': json.dumps(ACTION_SPACE),
+                 'observation_space': json.dumps(OBSERVATION_SPACE),
+                 'model_config': json.dumps(dqn_config)
                  }
 
-    start_msg = {'action_space': {'type':6},
-                 'observation_space': ['OBSERVATION_SPACE','xpto'],
-                 'model_config': "dqn_config"
-                 }
-    print({'action_space': ACTION_SPACE})
 
     msg = requests.post(START_TRAINER_URL, data=start_msg).json()
 
