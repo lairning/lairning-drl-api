@@ -4,6 +4,10 @@ from flask_injector import inject
 from drl.api.drl_server import DRLServer
 from datetime import datetime
 
+stdout = 'DRLServerAPI_{:%Y-%m-%d_%H:%M:%S%f}.log'.format(datetime.now())
+stderr = 'DRLServerAPI_{:%Y-%m-%d_%H:%M:%S%f}.log'.format(datetime.now())
+
+
 class DRLServerStart(Resource):
     DECORATORS = []
     ENDPOINT = "/drl/server/start"
@@ -15,6 +19,10 @@ class DRLServerStart(Resource):
         self.args.add_argument("observation_space", type=dict)
         self.args.add_argument("model_config", type=dict)
         self.drl_server = drl_server
+        with open(stdout, 'ab', 0) as f:
+            os.dup2(f.fileno(), sys.stdout.fileno())
+        with open(stderr, 'ab', 0) as f:
+            os.dup2(f.fileno(), sys.stderr.fileno())
 
     def post(self):
 
