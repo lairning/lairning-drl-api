@@ -2,11 +2,6 @@ from flask_restful import Resource, reqparse
 #from lairning_core import DRLServer
 from flask_injector import inject
 from drl.api.drl_server import DRLServer
-from datetime import datetime
-import os, sys
-
-stderr = 'DRLServerAPI_{:%Y-%m-%d_%H:%M:%S%f}.log'.format(datetime.now())
-
 
 class DRLServerStart(Resource):
     DECORATORS = []
@@ -15,12 +10,14 @@ class DRLServerStart(Resource):
     @inject
     def __init__(self, drl_server: DRLServer):
         self.args = reqparse.RequestParser()
-        self.args.add_argument("action_space", type=dict)
-        self.args.add_argument("observation_space", type=dict)
-        self.args.add_argument("model_config", type=dict)
+        self.args.add_argument("action_space")
+        self.args.add_argument("observation_space")
+        self.args.add_argument("model_config")
+        # self.args.add_argument("action_space", type=dict)
+        # self.args.add_argument("observation_space", type=dict)
+        # self.args.add_argument("model_config", type=dict)
+
         self.drl_server = drl_server
-        with open(stderr, 'ab', 0) as f:
-            os.dup2(f.fileno(), sys.stderr.fileno())
 
     def post(self):
 
@@ -35,8 +32,8 @@ class DRLServerStart(Resource):
             "observation_space": args.observation_space,
             "model_config": args.model_config
         }
-
-        return self.drl_server.start_trainer(payload=payload)
+        print(payload)
+        return None #self.drl_server.start_trainer(payload=payload)
 
 
 class DRLServerStop(Resource):
