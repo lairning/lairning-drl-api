@@ -27,15 +27,18 @@ class DRLServerStart(Resource):
 
     def post(self):
 
-        args = self.args.parse_args()
+        try:
+            args = self.args.parse_args()
+        except Exception as err:
+            print(err)
+            raise err
 
         payload = {
             "action_space": args.action_space,
             "observation_space": args.observation_space,
             "model_config": args.model_config
         }
-        print("{} : [DRL Server API] Payload {}"
-              .format(datetime.now(), payload))
+
         return self.drl_server.start_trainer(payload=payload)
 
 
