@@ -199,6 +199,8 @@ if __name__ == "__main__":
                  'model_config': dqn_config
                  }
 
+    print({'action_space': ACTION_SPACE})
+
     msg = requests.post(START_TRAINER_URL, data=start_msg).json()
 
     print(msg)
