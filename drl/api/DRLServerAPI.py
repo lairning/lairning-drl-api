@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 #from lairning_core import DRLServer
 from flask_injector import inject
 from drl.api.drl_server import DRLServer
+from datetime import datetime
 
 class DRLServerStart(Resource):
     DECORATORS = []
@@ -24,7 +25,8 @@ class DRLServerStart(Resource):
             "observation_space": args.observation_space,
             "model_config": args.model_config
         }
-
+        print("{} : [DRL Server API] Payload {}"
+              .format(datetime.now(), payload))
         return self.drl_server.start_trainer(payload=payload)
 
 
