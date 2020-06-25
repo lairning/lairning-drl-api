@@ -199,7 +199,10 @@ if __name__ == "__main__":
                  'model_config': dqn_config
                  }
 
-
+    start_msg = {'action_space': {'type':6},
+                 'observation_space': ['OBSERVATION_SPACE','xpto'],
+                 'model_config': "dqn_config"
+                 }
     print({'action_space': ACTION_SPACE})
 
     msg = requests.post(START_TRAINER_URL, data=start_msg).json()
