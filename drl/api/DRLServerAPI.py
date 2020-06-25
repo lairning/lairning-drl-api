@@ -3,6 +3,7 @@ from flask_restful import Resource, reqparse
 from flask_injector import inject
 from drl.api.drl_server import DRLServer
 from datetime import datetime
+import os
 
 stdout = 'DRLServerAPI_{:%Y-%m-%d_%H:%M:%S%f}.log'.format(datetime.now())
 stderr = 'DRLServerAPI_{:%Y-%m-%d_%H:%M:%S%f}.log'.format(datetime.now())
