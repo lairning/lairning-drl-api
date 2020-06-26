@@ -1,8 +1,9 @@
 from flask_restful import Resource, reqparse
-#from lairning_core import DRLServer
 from flask_injector import inject
-from drl.api.drl_server import DRLServer
+from lairning_core import DRLServer
+#from drl.api.drl_server import DRLServer
 import json
+from datetime import datetime
 
 class DRLServerStart(Resource):
     DECORATORS = []
@@ -24,17 +25,18 @@ class DRLServerStart(Resource):
 
         try:
             args = self.args.parse_args()
+            payload = {
+                "action_space": json.loads(args.action_space),
+                "observation_space": json.loads(args.observation_space),
+                "model_config": json.loads(args.model_config)
+            }
         except Exception as err:
-            print(err)
+            print("{} : DRLServerStart failed. ERR={}".
+                  format(datetime.now(), err))
             raise err
 
-        payload = {
-            "action_space": json.loads(args.action_space),
-            "observation_space": json.loads(args.observation_space),
-            "model_config": json.loads(args.model_config)
-        }
         print(payload)
-        return None #self.drl_server.start_trainer(payload=payload)
+        return {'status': False, 'error':'testing'} #self.drl_server.start_trainer(payload=payload)
 
 
 class DRLServerStop(Resource):

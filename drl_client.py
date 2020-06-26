@@ -1,16 +1,9 @@
-# import sys
-# import time
 import numpy as np
 import itertools
 from datetime import datetime
 
-from urllib import request, parse
 import requests
 
-# import gym
-# from gym.spaces import Discrete, Tuple
-
-# import ray.cloudpickle as pickle
 import pickle
 import json
 
@@ -119,10 +112,6 @@ dqn_config = {
     "timesteps_per_iteration": 500
 }
 
-DRL_SERVER_ADDRESS = "localhost"
-DRL_PORT = 7000
-DRL_SERVER_AUTHKEY = b'moontedrl!'
-
 # Commands for remote inference mode.
 START_EPISODE = "START_EPISODE"
 GET_ACTION = "GET_ACTION"
@@ -200,10 +189,13 @@ if __name__ == "__main__":
                  'model_config': json.dumps(dqn_config)
                  }
 
-
     msg = requests.post(START_TRAINER_URL, data=start_msg).json()
 
-    print(msg)
+    print(msg.status_code)
+    if msg.status_code != 200:
+        print("{} : Trainer Creation failed with ERR={}".
+              format(datetime.now(), msg['error']))
+        raise SystemExit
 
     if not msg['status']:
         print("{} : Trainer Creation failed with ERR={}".
