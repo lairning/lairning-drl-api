@@ -35,7 +35,6 @@ class DRLServerStart(Resource):
                   format(datetime.now(), err))
             raise err
 
-        print(payload)
         return {'status': False, 'error':'testing'} #self.drl_server.start_trainer(payload=payload)
 
 

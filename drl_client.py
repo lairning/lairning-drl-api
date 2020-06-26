@@ -189,13 +189,15 @@ if __name__ == "__main__":
                  'model_config': json.dumps(dqn_config)
                  }
 
-    msg = requests.post(START_TRAINER_URL, data=start_msg).json()
+    msg = requests.post(START_TRAINER_URL, data=start_msg)
 
     print(msg.status_code)
     if msg.status_code != 200:
         print("{} : Trainer Creation failed with ERR={}".
               format(datetime.now(), msg['error']))
         raise SystemExit
+
+    msg = msg.json()
 
     if not msg['status']:
         print("{} : Trainer Creation failed with ERR={}".
