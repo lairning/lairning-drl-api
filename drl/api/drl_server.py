@@ -15,7 +15,7 @@ import ray
 
 import sys
 
-SERVER_ADDRESS = "localhost"
+SERVER_ADDRESS = "127.0.0.1"
 PORT = 5010
 AUTHKEY = b'moontedrl!'
 
