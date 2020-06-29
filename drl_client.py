@@ -209,6 +209,7 @@ if __name__ == "__main__":
     print("{} : Trainer Created with ID={}, and ADDRESS={}".
           format(datetime.now(), trainer_id, trainer_address))
 
+    '''
     world = MKTWorld(env_config)
     drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
 
@@ -229,7 +230,7 @@ if __name__ == "__main__":
             total += reward
         print("{} : Iteration {} - Mean Reward = {}"
               .format(datetime.now(), i, total / count))
-
+    '''
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
     print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
