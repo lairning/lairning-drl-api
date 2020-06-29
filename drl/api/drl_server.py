@@ -136,10 +136,12 @@ class DRLServer:
             trainer_ok = self.queue.get(block=True, timeout=None)
             if trainer_ok:
                 self.drl_trainers[self.trainer_id] = trainer
-                self.trainer_id += 1
                 print("{} : [INFO] Live DRL Trainers {}"
                       .format(datetime.now(), self.drl_trainers))
-                return {'status': True, 'id': self.trainer_id, 'address': "localhost:{}".format(PORT + self.trainer_id)}
+                return_msg = {'status': True, 'id': self.trainer_id,
+                              'address': "localhost:{}".format(PORT + self.trainer_id)}
+                self.trainer_id += 1
+                return return_msg
             else:
                 print("{} : [PROCESS ERROR] DRL Server failed to create DRL Trainer {}."
                       .format(datetime.now(), self.trainer_id))
