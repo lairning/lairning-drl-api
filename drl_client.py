@@ -121,9 +121,10 @@ END_EPISODE = "END_EPISODE"
 
 
 class DRLTrainer:
-    def __init__(self, trainer_id: int, trainer_address: tuple):
+    def __init__(self, trainer_id: int, trainer_address: str):
         self.id = trainer_id
-        self.address = "http://{}:{}".format(trainer_address[0], trainer_address[1])
+        self.address = trainer_address
+        # self.address = "http://{}:{}".format(trainer_address[0], trainer_address[1])
         print("{} : Trainer full ADDRESS={}".
               format(datetime.now(), self.address))
 
@@ -202,9 +203,6 @@ if __name__ == "__main__":
         print("{} : Trainer Creation failed with ERR={}".
               format(datetime.now(), msg['error']))
         raise SystemExit
-
-    print("{} : Trainer Created MSG={}".
-          format(datetime.now(), msg))
 
     trainer_id = msg['id']
     trainer_address = msg['address']
