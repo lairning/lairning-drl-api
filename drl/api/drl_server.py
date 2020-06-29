@@ -2,7 +2,6 @@ import os
 
 from datetime import datetime
 
-# from multiprocessing.connection import Listener
 from multiprocessing import Process, ProcessError, Queue
 
 import gym
@@ -106,7 +105,6 @@ class DRLServer:
         self.drl_trainers = dict()
         self.queue = Queue()
 
-    # TODO: expose as a REST API
     def start_trainer(self, payload: dict) -> dict:
         # msg format: {'operation': 'start', 'action_space':..., 'observation_space':..., 'dqn_config':... }
         # Log file fo the new DRL Trainer
@@ -157,7 +155,6 @@ class DRLServer:
                   .format(datetime.now(), err))
             return {'status': False, 'error': 'DRL Server Critical error'}
 
-    # TODO: expose as a REST API
     def stop_trainer(self, payload: dict) -> dict:
         print("{} : [INFO] DRL Server is about to stop Trainer {}"
               .format(datetime.now(), payload['id']))
