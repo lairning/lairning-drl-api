@@ -15,7 +15,7 @@ import ray
 
 import sys
 
-SERVER_ADDRESS = "127.0.0.1"
+SERVER_ADDRESS = "localhost"
 PORT = 5010
 AUTHKEY = b'moontedrl!'
 
@@ -141,7 +141,7 @@ class DRLServer:
                 print("{} : [INFO] Live DRL Trainers {}"
                       .format(datetime.now(), self.drl_trainers))
                 return_msg = {'status': True, 'id': self.trainer_id,
-                              'address': "localhost:{}".format(PORT + self.trainer_id)}
+                              'address': "http://{}:{}".format(SERVER_ADDRESS, PORT + self.trainer_id)}
                 self.trainer_id += 1
                 return return_msg
             else:
