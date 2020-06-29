@@ -35,7 +35,7 @@ class DRLServerStart(Resource):
                   format(datetime.now(), err))
             raise err
 
-        return {'status': False, 'error':'testing'} #self.drl_server.start_trainer(payload=payload)
+        return self.drl_server.start_trainer(payload=payload)
 
 
 class DRLServerStop(Resource):
@@ -49,7 +49,14 @@ class DRLServerStop(Resource):
         self.drl_server = drl_server
 
     def post(self):
-        args = self.args.parse_args()
-        payload = {"id": args.id}
+
+        try:
+            args = self.args.parse_args()
+            payload = {"id": args.id}
+        except Exception as err:
+            print("{} : DRLServerStart failed. ERR={}".
+                  format(datetime.now(), err))
+            raise err
+
         return self.drl_server.stop_trainer(payload=payload)
 

@@ -191,7 +191,6 @@ if __name__ == "__main__":
 
     msg = requests.post(START_TRAINER_URL, data=start_msg)
 
-    print(msg.status_code)
     if msg.status_code != 200:
         print("{} : Trainer Creation failed with ERR={}".
               format(datetime.now(), msg['error']))
