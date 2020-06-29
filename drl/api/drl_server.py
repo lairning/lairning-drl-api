@@ -59,7 +59,7 @@ def drl_trainer(
             env="srv",
             config=dqn_config
         )
-        print("{} : [INFO] DRL Trainer Configured at {}:{"}
+        print("{} : [INFO] DRL Trainer Configured at {}:{}"
               .format(datetime.now(), SERVER_ADDRESS, input_port))
     except Exception as err:
         q.put(False)
