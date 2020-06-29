@@ -2,7 +2,7 @@ import os
 
 from datetime import datetime
 
-from multiprocessing.connection import Listener
+# from multiprocessing.connection import Listener
 from multiprocessing import Process, ProcessError, Queue
 
 import gym
@@ -16,7 +16,7 @@ import ray
 import sys
 
 SERVER_ADDRESS = "localhost"
-PORT = 7000
+PORT = 5010
 AUTHKEY = b'moontedrl!'
 
 

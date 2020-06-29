@@ -203,6 +203,9 @@ if __name__ == "__main__":
               format(datetime.now(), msg['error']))
         raise SystemExit
 
+    print("{} : Trainer Created MSG={}".
+          format(datetime.now(), msg))
+
     trainer_id = msg['id']
     trainer_address = msg['address']
     print("{} : Trainer Created with ID={}, and ADDRESS={}".
