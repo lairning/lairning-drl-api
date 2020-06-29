@@ -124,9 +124,6 @@ class DRLTrainer:
     def __init__(self, trainer_id: int, trainer_address: str):
         self.id = trainer_id
         self.address = trainer_address
-        # self.address = "http://{}:{}".format(trainer_address[0], trainer_address[1])
-        print("{} : Trainer full ADDRESS={}".
-              format(datetime.now(), self.address))
 
     def _send(self, data):
         payload = pickle.dumps(data)
@@ -138,7 +135,6 @@ class DRLTrainer:
         if response.status_code != 200:
             print("{} : Request failed {}: {}"
                   .format(datetime.now(), response.text, data))
-            # logger.error("Request failed {}: {}".format(response.text, data))
         response.raise_for_status()
         parsed = pickle.loads(response.content)
         return parsed
@@ -209,7 +205,6 @@ if __name__ == "__main__":
     print("{} : Trainer Created with ID={}, and ADDRESS={}".
           format(datetime.now(), trainer_id, trainer_address))
 
-    '''
     world = MKTWorld(env_config)
     drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
 
@@ -230,7 +225,7 @@ if __name__ == "__main__":
             total += reward
         print("{} : Iteration {} - Mean Reward = {}"
               .format(datetime.now(), i, total / count))
-    '''
+
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
     print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
