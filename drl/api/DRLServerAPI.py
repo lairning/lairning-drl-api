@@ -1,7 +1,9 @@
 from flask_restful import Resource, reqparse
-from lairning_core import DRLServer
 from flask_injector import inject
-
+from lairning_core import DRLServer
+# from drl.api.drl_server import DRLServer
+import json
+from datetime import datetime
 
 class DRLServerStart(Resource):
     DECORATORS = []
@@ -10,20 +12,27 @@ class DRLServerStart(Resource):
     @inject
     def __init__(self, drl_server: DRLServer):
         self.args = reqparse.RequestParser()
-        self.args.add_argument("action_space", type=dict)
-        self.args.add_argument("observation_space", type=dict)
-        self.args.add_argument("model_config", type=dict)
+        self.args.add_argument("action_space")
+        self.args.add_argument("observation_space")
+        self.args.add_argument("model_config")
+        # self.args.add_argument("action_space", type=dict)
+        # self.args.add_argument("observation_space", type=dict)
+        # self.args.add_argument("model_config", type=dict)
         self.drl_server = drl_server
 
     def post(self):
 
-        args = self.args.parse_args()
-
-        payload = {
-            "action_space": args.action_space,
-            "observation_space": args.observation_space,
-            "model_config": args.model_config
-        }
+        try:
+            args = self.args.parse_args()
+            payload = {
+                "action_space": json.loads(args.action_space),
+                "observation_space": json.loads(args.observation_space),
+                "model_config": json.loads(args.model_config)
+            }
+        except Exception as err:
+            print("{} : DRLServerStart failed. ERR={}".
+                  format(datetime.now(), err))
+            raise err
 
         return self.drl_server.start_trainer(payload=payload)
 
@@ -39,7 +48,14 @@ class DRLServerStop(Resource):
         self.drl_server = drl_server
 
     def post(self):
-        args = self.args.parse_args()
-        payload = {"id": args.id}
+
+        try:
+            args = self.args.parse_args()
+            payload = {"id": args.id}
+        except Exception as err:
+            print("{} : DRLServerStart failed. ERR={}".
+                  format(datetime.now(), err))
+            raise err
+
         return self.drl_server.stop_trainer(payload=payload)
 
