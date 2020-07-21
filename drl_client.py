@@ -39,7 +39,7 @@ class Space:
 
 
 ACTION_SPACE = Space.discrete(4)
-OBSERVATION_SPACE = Space.tuple((Space.discrete(7), Space.discrete(3), Space.discrete(2), Space.discrete(6)))
+OBSERVATION_SPACE = Space.tuple((Space.discrete(7), Space.discrete(3), Space.discrete(2), Space.discrete(5)))
 
 
 class MKTWorld:
@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
     if msg.status_code != 200:
         print("{} : Trainer Creation failed with ERR={}".
-              format(datetime.now(), msg['error']))
+              format(datetime.now(), msg.status_code))
         raise SystemExit
 
     msg = msg.json()

@@ -1,7 +1,8 @@
 from flask_restful import Resource, reqparse
 from flask_injector import inject
-from lairning_core import DRLServer
+from lairning_core.drl import DRLServer
 # from drl.api.drl_server import DRLServer
+
 import json
 from datetime import datetime
 
