@@ -9,8 +9,8 @@ from flask_injector import FlaskInjector, singleton
 
 from drl.api import API_HANDLERS
 
-#from lairning_core import DRLServer
-from drl.api.drl_server import DRLServer
+from lairning_core.drl import DRLServer
+#from drl.api.drl_server import DRLServer
 
 DATABASE_TYPE = os.environ.get("DATABASE_TYPE", "mysql")
 DATABASE_HOST = os.environ.get("DATABASE_HOST", "127.0.0.1")
