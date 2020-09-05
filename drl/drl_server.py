@@ -19,6 +19,8 @@ import sys
 from ray.rllib.utils.framework import try_import_tf
 tf = try_import_tf()
 
+import numpy as np
+
 SERVER_ADDRESS = "localhost"
 PORT = 5010
 AUTHKEY = b'moontedrl!'
