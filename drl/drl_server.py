@@ -78,7 +78,8 @@ class ParametricActionsModel(DistributionalQTFModel):
               .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
-            obs_space["cart"], action_space, num_outputs,
+            # obs_space["cart"], action_space, num_outputs,
+            obs_space, action_space, num_outputs,
             model_config, name + "_action_param")
         self.register_variables(self.action_param_model.variables())
 
