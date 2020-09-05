@@ -135,6 +135,7 @@ def drl_trainer(
         q.put(False)
         print("{} : [ERROR] DRL Trainer {}"
               .format(datetime.now(), err))
+        raise err
 
     q.put(True)
 
