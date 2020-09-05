@@ -72,7 +72,7 @@ class ParametricActionsModel(DistributionalQTFModel):
         #      .format(datetime.now(),action_space, obs_space, num_outputs, name, model_config))
 
         observation_space = Dict({
-            "action_mask": Box(0, 1, shape=(self.action_space.n,)),
+            "action_mask": Box(0, 1, shape=(action_space.n,)),
             "cart"       : obs_space,
         })
 
