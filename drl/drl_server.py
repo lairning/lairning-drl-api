@@ -67,10 +67,15 @@ class ParametricActionsModel(DistributionalQTFModel):
                  model_config,
                  name,
                  **kw):
+
+        print("{} : [INFO] ParametricActionsModel {}, {}, {}, {}, {}"
+              .format(datetime.now(),action_space, obs_space, num_outputs, name, model_config))
+
         super(ParametricActionsModel, self).__init__(
             obs_space, action_space, num_outputs, model_config, name, **kw)
-        # print("####### obs_space {}".format(obs_space))
-        # raise Exception("END")
+
+        print("{} : [INFO] ParametricActionsModel Super Done!"
+              .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
             obs_space["cart"], action_space, num_outputs,
