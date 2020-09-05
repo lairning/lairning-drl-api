@@ -27,13 +27,13 @@ AUTHKEY = b'moontedrl!'
 class MKTWorld(gym.Env):
     def __init__(self, action_space, observation_space):
         self.action_space = action_space
-        self.observation_space = observation_space
-        '''        
+        #self.observation_space = observation_space
+        #'''
         self.observation_space = Dict({
             "action_mask": Box(0, 1, shape=( self.action_space.n, )),
             "cart": observation_space,
         })
-'''
+#'''
 #TODO: Probably to be Removed
 '''
 class ParametricMKTWorld(gym.Env):
@@ -68,14 +68,14 @@ class ParametricActionsModel(DistributionalQTFModel):
                  name,
                  **kw):
 
-        print("{} : [INFO] ParametricActionsModel {}, {}, {}, {}, {}"
-              .format(datetime.now(),action_space, obs_space, num_outputs, name, model_config))
+        # print("{} : [INFO] ParametricActionsModel {}, {}, {}, {}, {}"
+        #      .format(datetime.now(),action_space, obs_space, num_outputs, name, model_config))
 
         super(ParametricActionsModel, self).__init__(
             obs_space, action_space, num_outputs, model_config, name, **kw)
 
-        print("{} : [INFO] ParametricActionsModel Super Done!"
-              .format(datetime.now()))
+        # print("{} : [INFO] ParametricActionsModel Super Done!"
+        #      .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
             # obs_space["cart"], action_space, num_outputs,
