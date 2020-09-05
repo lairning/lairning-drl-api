@@ -11,6 +11,7 @@ from ray.rllib.agents.dqn import DQNTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.rllib.agents.dqn.distributional_q_tf_model import DistributionalQTFModel
 from ray.tune.registry import register_env
+from ray.rllib.models import ModelCatalog
 import ray
 
 import sys
@@ -112,6 +113,8 @@ def drl_trainer(
         ray.init()
 
         register_env("srv", lambda _: MKTWorld(action_space, observation_space))
+
+        ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
 
         dqn_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
