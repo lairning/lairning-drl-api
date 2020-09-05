@@ -10,11 +10,14 @@ from gym.spaces import Space, Discrete, Tuple, Box, Dict
 from ray.rllib.agents.dqn import DQNTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.rllib.agents.dqn.distributional_q_tf_model import DistributionalQTFModel
+from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
 from ray.tune.registry import register_env
 from ray.rllib.models import ModelCatalog
 import ray
-
 import sys
+
+from ray.rllib.utils.framework import try_import_tf
+tf = try_import_tf()
 
 SERVER_ADDRESS = "localhost"
 PORT = 5010
