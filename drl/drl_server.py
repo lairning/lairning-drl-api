@@ -71,8 +71,14 @@ class ParametricActionsModel(DistributionalQTFModel):
         # print("{} : [INFO] ParametricActionsModel {}, {}, {}, {}, {}"
         #      .format(datetime.now(),action_space, obs_space, num_outputs, name, model_config))
 
+        observation_space = Dict({
+            "action_mask": Box(0, 1, shape=(self.action_space.n,)),
+            "cart"       : obs_space,
+        })
+
         super(ParametricActionsModel, self).__init__(
-            obs_space, action_space, num_outputs, model_config, name, **kw)
+            # obs_space, action_space, num_outputs, model_config, name, **kw)
+            observation_space, action_space, num_outputs, model_config, name, **kw)
 
         # print("{} : [INFO] ParametricActionsModel Super Done!"
         #      .format(datetime.now()))
