@@ -79,7 +79,7 @@ class ParametricActionsModel(DistributionalQTFModel):
         #      .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
-            Tuple(Discrete(17), Discrete(3), Discrete(2), Discrete(5)), action_space, 6,
+            Tuple((Discrete(17), Discrete(3), Discrete(2), Discrete(5))), action_space, 6,
             # obs_space, action_space, num_outputs,
             model_config, name + "_action_param")
         self.register_variables(self.action_param_model.variables())
