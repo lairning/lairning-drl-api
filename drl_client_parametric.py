@@ -49,7 +49,6 @@ def space_tuple(t: tuple):
     return {'type': 'Tuple', 'value': t}
 
 
-
 ACTION_SPACE = space_discrete(max([len(options) for options in MKT_TEMPLATES.values()]))
 
 tp_size = len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys())
@@ -57,6 +56,17 @@ OBSERVATION_TUPLE = ((space_discrete(tp_size)),)
 OBSERVATION_TUPLE += tuple((space_discrete(len(val_list)) for val_list in CUSTOMER_ATTRIBUTES.values()))
 OBSERVATION_SPACE = space_tuple(OBSERVATION_TUPLE)
 
+def _get_action_mask(actions: list, max_actions: int):
+    action_mask = [0] * max_actions
+    action_len = len(actions)
+    action_mask[:action_len] = [1] * action_len
+    return action_mask
+
+tp_actions = MKT_TEMPLATES
+mask_size = max([len(options) for options in MKT_TEMPLATES.values()])
+
+action_mask = {tp_id: _get_action_mask(tp_actions[tp], mask_size) for tp_id, tp
+               in enumerate(tp_actions.keys())}
 
 class MKTWorld:
 
@@ -92,7 +102,7 @@ class MKTWorld:
         for i,_ in enumerate(CUSTOMER_ATTRIBUTES.keys()):
             self.observation[i+1] = self.customer_values[i].index(cs[customer_feature[i]])
 
-        return self.observation
+        return {'action_mask': action_mask[0], 'cart': self.observation}
 
     def step(self, action):
         touch_point = self.touch_points[self.observation[0]]
@@ -106,7 +116,7 @@ class MKTWorld:
         self.observation[0] = self.touch_points.index(new_touch_point)
         done = new_touch_point in self.rewards.keys()
         reward = self.rewards[new_touch_point] if done else 0
-        return self.observation, reward, done, {}
+        return {'action_mask': action_mask[self.observation[0]], 'cart': self.observation}, reward, done, {}
 
 
 env_config = {
