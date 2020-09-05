@@ -21,6 +21,7 @@ DATABASE_FILE = os.environ.get("DATABASE_FILE", "database.sqlite")
 JWT_SECRET = os.environ.get("JWT_SECRET", "Pocosi12!")
 PORT = int(os.environ.get("PORT", "5002"))
 
+'''
 print(f"DATABASE_TYPE: {DATABASE_TYPE}")
 print(f"DATABASE_HOST:  {DATABASE_HOST}")
 print(f"DATABASE_USER: {DATABASE_USER}")
@@ -29,6 +30,7 @@ print(f"DATABASE_NAME: {DATABASE_NAME}")
 print(f"DATABASE_FILE: {DATABASE_FILE}")
 print(f"JWT_SECRET: {JWT_SECRET}")
 print(f"PORT:  {PORT}")
+'''
 
 API_PREFIX = "/v1"
 app = Flask(__name__)

@@ -5,10 +5,11 @@ from datetime import datetime
 from multiprocessing import Process, ProcessError, Queue
 
 import gym
-from gym.spaces import Space, Discrete, Tuple
+from gym.spaces import Space, Discrete, Tuple, Box, Dict
 
 from ray.rllib.agents.dqn import DQNTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
+from ray.rllib.agents.dqn.distributional_q_tf_model import DistributionalQTFModel
 from ray.tune.registry import register_env
 import ray
 
@@ -22,13 +23,76 @@ AUTHKEY = b'moontedrl!'
 class MKTWorld(gym.Env):
     def __init__(self, action_space, observation_space):
         self.action_space = action_space
-        self.observation_space = observation_space
+        self.observation_space = Dict({
+            "action_mask": Box(0, 1, shape=( self.action_space.n, )),
+            "cart": observation_space,
+        })
+
+#TODO: Probably to be Removed
+'''
+class ParametricMKTWorld(gym.Env):
+    def __init__(self, action_space, observation_space, action_mask):
+        self.action_space = action_space
+        self.mktworld = MKTWorld(action_space, observation_space)
+        self.action_mask = action_mask
+        self.observation_space = Dict({
+            "action_mask": Box(0, 1, shape=( self.action_space.n, )),
+            "cart": self.mktworld.observation_space,
+        })
+
+    def reset(self):
+        return {
+            "action_mask": self.action_mask[0],
+            "cart": self.mktworld.reset()
+        }
+
+    def step(self, action):
+        orig_obs, rew, done, info = self.mktworld.step(action)
+        obs = {
+
+        }
+'''
+
+class ParametricActionsModel(DistributionalQTFModel):
+    def __init__(self,
+                 obs_space,
+                 action_space,
+                 num_outputs,
+                 model_config,
+                 name,
+                 **kw):
+        super(ParametricActionsModel, self).__init__(
+            obs_space, action_space, num_outputs, model_config, name, **kw)
+        # print("####### obs_space {}".format(obs_space))
+        # raise Exception("END")
+
+        self.action_param_model = FullyConnectedNetwork(
+            obs_space["cart"], action_space, num_outputs,
+            model_config, name + "_action_param")
+        self.register_variables(self.action_param_model.variables())
+
+    def forward(self, input_dict, state, seq_lens):
+        # Extract the available actions tensor from the observation.
+        action_mask = input_dict["obs"]["action_mask"]
+
+        # Compute the predicted action embedding
+        action_param, _ = self.action_param_model({
+            "obs": input_dict["obs"]["cart"]
+        })
+
+        # Mask out invalid actions (use tf.float32.min for stability)
+        inf_mask = tf.maximum(tf.log(action_mask), tf.float32.min)
+        return action_param + inf_mask, state
+
+    def value_function(self):
+        return self.action_param_model.value_function()
 
 
 def drl_trainer(
         log_file: str,
         input_port: int,
-        action_space: Space,
+        action_space: Space, # A Discrete Space with Max Available Actions across all the Touch Points
+        # action_mask: dict,   # Dict containing a Mask for each Touch Point
         observation_space: Space,
         dqn_config: dict,
         q: Queue):
@@ -51,6 +115,7 @@ def drl_trainer(
 
         dqn_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
+             "model": {"custom_model": "ParametricActionsModel"},
              "num_workers": 0,
              "input_evaluation": []})
 
@@ -112,6 +177,8 @@ class DRLServer:
         try:
             action_space = myspace2gymspace(payload['action_space'])
             observation_space = myspace2gymspace(payload['observation_space'])
+            # action_mask = payload['action_mask'],
+            model_config = payload['model_config']
         except Exception as err:
             print("{} : [ERROR CREATING GYM SPACES] {}}"
                   .format(datetime.now(), err))
@@ -121,8 +188,9 @@ class DRLServer:
             trainer_log_file,
             PORT + self.trainer_id,
             action_space,
+            # action_mask,
             observation_space,
-            payload['model_config'],
+            model_config,
             self.queue
         )
         print("{} : [INFO] DRL Server is about to start a new DRL Trainer"

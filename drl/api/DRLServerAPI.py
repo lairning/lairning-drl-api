@@ -14,11 +14,9 @@ class DRLServerStart(Resource):
     def __init__(self, drl_server: DRLServer):
         self.args = reqparse.RequestParser()
         self.args.add_argument("action_space")
+        self.args.add_argument("action_mask")
         self.args.add_argument("observation_space")
         self.args.add_argument("model_config")
-        # self.args.add_argument("action_space", type=dict)
-        # self.args.add_argument("observation_space", type=dict)
-        # self.args.add_argument("model_config", type=dict)
         self.drl_server = drl_server
 
     def post(self):
@@ -27,6 +25,7 @@ class DRLServerStart(Resource):
             args = self.args.parse_args()
             payload = {
                 "action_space": json.loads(args.action_space),
+                "action_mask": json.loads(args.action_mask),
                 "observation_space": json.loads(args.observation_space),
                 "model_config": json.loads(args.model_config)
             }
