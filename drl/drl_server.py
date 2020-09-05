@@ -5,7 +5,7 @@ from datetime import datetime
 from multiprocessing import Process, ProcessError, Queue
 
 import gym
-from gym.spaces import Space, Discrete, Tuple, Box, Dict
+from gym.spaces import Space, Discrete, Tuple, Box, Dict, flatten
 
 from ray.rllib.agents.dqn import DQNTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
@@ -23,17 +23,71 @@ SERVER_ADDRESS = "localhost"
 PORT = 5010
 AUTHKEY = b'moontedrl!'
 
+def flatten_space(space):
+    """Flatten a space into a single ``Box``.
+    This is equivalent to ``flatten()``, but operates on the space itself. The
+    result always is a `Box` with flat boundaries. The box has exactly
+    ``flatdim(space)`` dimensions. Flattening a sample of the original space
+    has the same effect as taking a sample of the flattenend space.
+    Raises ``NotImplementedError`` if the space is not defined in
+    ``gym.spaces``.
+    Example::
+        >>> box = Box(0.0, 1.0, shape=(3, 4, 5))
+        >>> box
+        Box(3, 4, 5)
+        >>> flatten_space(box)
+        Box(60,)
+        >>> flatten(box, box.sample()) in flatten_space(box)
+        True
+    Example that flattens a discrete space::
+        >>> discrete = Discrete(5)
+        >>> flatten_space(discrete)
+        Box(5,)
+        >>> flatten(box, box.sample()) in flatten_space(box)
+        True
+    Example that recursively flattens a dict::
+        >>> space = Dict({"position": Discrete(2),
+        ...               "velocity": Box(0, 1, shape=(2, 2))})
+        >>> flatten_space(space)
+        Box(6,)
+        >>> flatten(space, space.sample()) in flatten_space(space)
+        True
+    """
+    if isinstance(space, Box):
+        return Box(space.low.flatten(), space.high.flatten())
+    if isinstance(space, Discrete):
+        return Box(low=0, high=1, shape=(space.n, ))
+    if isinstance(space, Tuple):
+        space = [flatten_space(s) for s in space.spaces]
+        return Box(
+            low=np.concatenate([s.low for s in space]),
+            high=np.concatenate([s.high for s in space]),
+        )
+    if isinstance(space, Dict):
+        space = [flatten_space(s) for s in space.spaces.values()]
+        return Box(
+            low=np.concatenate([s.low for s in space]),
+            high=np.concatenate([s.high for s in space]),
+        )
+    if isinstance(space, MultiBinary):
+        return Box(low=0, high=1, shape=(space.n, ))
+    if isinstance(space, MultiDiscrete):
+        return Box(
+            low=np.zeros_like(space.nvec),
+            high=space.nvec,
+        )
+    raise NotImplementedError
 
 class MKTWorld(gym.Env):
     def __init__(self, action_space, observation_space):
         self.action_space = action_space
-        #self.observation_space = observation_space
-        #'''
+        self.observation_space = observation_space
+        '''
         self.observation_space = Dict({
             "action_mask": Box(0, 1, shape=(action_space.n, )),
             "cart": observation_space,
         })
-#'''
+'''
 #TODO: Probably to be Removed
 '''
 class ParametricMKTWorld(gym.Env):
@@ -59,6 +113,17 @@ class ParametricMKTWorld(gym.Env):
         }
 '''
 
+class FlattenObservation(gym.ObservationWrapper):
+    r"""Observation wrapper that flattens the observation."""
+    def __init__(self, env):
+        super(FlattenObservation, self).__init__(env)
+        self.observation_space = flatten_space(env.observation_space)
+
+    def observation(self, observation):
+        return flatten(self.env.observation_space, observation)
+
+observation_space_flatten = None
+
 class ParametricActionsModel(DistributionalQTFModel):
     def __init__(self,
                  obs_space,
@@ -79,7 +144,7 @@ class ParametricActionsModel(DistributionalQTFModel):
         #      .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
-            Tuple((Discrete(17), Discrete(3), Discrete(2), Discrete(5))), action_space, 6,
+            flatten_space(Tuple((Discrete(17), Discrete(3), Discrete(2), Discrete(5)))), action_space, 6,
             # obs_space, action_space, num_outputs,
             model_config, name + "_action_param")
         self.register_variables(self.action_param_model.variables())
@@ -92,9 +157,11 @@ class ParametricActionsModel(DistributionalQTFModel):
 
         action_mask = input_dict["obs"]["action_mask"]
 
+        global observation_space_flatten
+
         # Compute the predicted action embedding
         action_param, _ = self.action_param_model({
-            "obs": input_dict["obs"]["cart"]
+            "obs": observation_space_flatten.observation(input_dict["obs"]["cart"])
         })
 
         # Mask out invalid actions (use tf.float32.min for stability)
@@ -128,7 +195,11 @@ def drl_trainer(
 
         ray.init()
 
-        register_env("srv", lambda _: MKTWorld(action_space, observation_space))
+        global observation_space_flatten
+
+        observation_space_flatten = FlattenObservation(MKTWorld(action_space, observation_space))
+
+        register_env("srv", lambda _: MKTWorld(action_space, flatten_space(observation_space)))
 
         print("{} : [INFO] DRL Trainer MKTWorld Env Registered {},{}"
               .format(datetime.now(),action_space, observation_space))
