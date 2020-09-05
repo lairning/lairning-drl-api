@@ -117,6 +117,9 @@ def drl_trainer(
 
         register_env("srv", lambda _: MKTWorld(action_space, observation_space))
 
+        print("{} : [INFO] DRL Trainer MKTWorld Env Registered {},{}"
+              .format(datetime.now(),action_space, observation_space))
+
         ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
 
         dqn_config.update(
@@ -124,6 +127,9 @@ def drl_trainer(
              "model": {"custom_model": "ParametricActionsModel"},
              "num_workers": 0,
              "input_evaluation": []})
+
+        print("{} : [INFO] DRL Trainer ParametricActionsModel Registered {}"
+              .format(datetime.now(),dqn_config))
 
         dqn = DQNTrainer(
             env="srv",
