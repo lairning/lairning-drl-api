@@ -139,14 +139,14 @@ class ParametricActionsModel(DistributionalQTFModel):
               .format(datetime.now(),action_space, obs_space, num_outputs, name))
 
         super(ParametricActionsModel, self).__init__(
-            obs_space, action_space, num_outputs, model_config, name, **kw)
+            obs_space, action_space, 6, model_config, name, **kw)
             # observation_space, action_space, num_outputs, model_config, name, **kw)
 
         # print("{} : [INFO] ParametricActionsModel Super Done!"
         #      .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
-            flatten_space(Tuple((Discrete(17), Discrete(3), Discrete(2), Discrete(5)))), action_space, num_outputs,
+            flatten_space(Tuple((Discrete(17), Discrete(3), Discrete(2), Discrete(5)))), action_space, 6,
             # obs_space, action_space, num_outputs,
             model_config, name + "_action_param")
         self.register_variables(self.action_param_model.variables())
