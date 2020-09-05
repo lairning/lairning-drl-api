@@ -201,7 +201,7 @@ def drl_trainer(
 
         observation_space_flatten = FlattenObservation(MKTWorld(action_space, observation_space))
 
-        register_env("srv", lambda _: MKTWorld(action_space, flatten_space(observation_space)))
+        register_env("srv", lambda _: MKTWorld(action_space, observation_space))
 
         print("{} : [INFO] DRL Trainer MKTWorld Env Registered {},{}"
               .format(datetime.now(),action_space, observation_space))
