@@ -26,12 +26,14 @@ AUTHKEY = b'moontedrl!'
 
 class MKTWorld(gym.Env):
     def __init__(self, action_space, observation_space):
+        super(MKTWorld, self).__init__(action_space, observation_space)
+'''        
         self.action_space = action_space
         self.observation_space = Dict({
             "action_mask": Box(0, 1, shape=( self.action_space.n, )),
             "cart": observation_space,
         })
-
+'''
 #TODO: Probably to be Removed
 '''
 class ParametricMKTWorld(gym.Env):
