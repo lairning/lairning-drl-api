@@ -124,11 +124,11 @@ def drl_trainer(
 
         ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
 
-        dqn_config.update(
-            {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
+        #dqn_config.update(
+        dqn_config = {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
              "model": {"custom_model": "ParametricActionsModel"},
              "num_workers": 0,
-             "input_evaluation": []})
+             "input_evaluation": []}
 
         print("{} : [INFO] DRL Trainer ParametricActionsModel Registered {}"
               .format(datetime.now(),dqn_config))
