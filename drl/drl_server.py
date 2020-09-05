@@ -30,7 +30,7 @@ class MKTWorld(gym.Env):
         #self.observation_space = observation_space
         #'''
         self.observation_space = Dict({
-            "action_mask": Box(0, 1, shape=( self.action_space.n, )),
+            "action_mask": Box(0, 1, shape=(action_space.n, )),
             "cart": observation_space,
         })
 #'''
@@ -68,29 +68,28 @@ class ParametricActionsModel(DistributionalQTFModel):
                  name,
                  **kw):
 
-        # print("{} : [INFO] ParametricActionsModel {}, {}, {}, {}, {}"
-        #      .format(datetime.now(),action_space, obs_space, num_outputs, name, model_config))
-
-        observation_space = Dict({
-            "action_mask": Box(0, 1, shape=(action_space.n,)),
-            "cart"       : obs_space,
-        })
+        print("{} : [INFO] ParametricActionsModel {}, {}, {}, {}"
+              .format(datetime.now(),action_space, obs_space, num_outputs, name))
 
         super(ParametricActionsModel, self).__init__(
-            # obs_space, action_space, num_outputs, model_config, name, **kw)
-            observation_space, action_space, num_outputs, model_config, name, **kw)
+            obs_space, action_space, num_outputs, model_config, name, **kw)
+            # observation_space, action_space, num_outputs, model_config, name, **kw)
 
         # print("{} : [INFO] ParametricActionsModel Super Done!"
         #      .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
-            # obs_space["cart"], action_space, num_outputs,
-            obs_space, action_space, num_outputs,
+            Box(0, 1, shape=(27, )), action_space, num_outputs,
+            # obs_space, action_space, num_outputs,
             model_config, name + "_action_param")
         self.register_variables(self.action_param_model.variables())
 
     def forward(self, input_dict, state, seq_lens):
         # Extract the available actions tensor from the observation.
+
+        #print("{} : [INFO] Forward Input Dict {}"
+        #      .format(datetime.now(), input_dict))
+
         action_mask = input_dict["obs"]["action_mask"]
 
         # Compute the predicted action embedding
