@@ -87,8 +87,8 @@ class ParametricActionsModel(DistributionalQTFModel):
     def forward(self, input_dict, state, seq_lens):
         # Extract the available actions tensor from the observation.
 
-        #print("{} : [INFO] Forward Input Dict {}"
-        #      .format(datetime.now(), input_dict))
+        print("{} : [INFO] Forward Input Dict {}"
+              .format(datetime.now(), input_dict))
 
         action_mask = input_dict["obs"]["action_mask"]
 
