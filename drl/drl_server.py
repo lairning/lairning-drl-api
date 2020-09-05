@@ -79,7 +79,7 @@ class ParametricActionsModel(DistributionalQTFModel):
         #      .format(datetime.now()))
 
         self.action_param_model = FullyConnectedNetwork(
-            Box(0, 1, shape=(27, )), action_space, num_outputs,
+            Tuple(Discrete(17), Discrete(3), Discrete(2), Discrete(5)), action_space, 6,
             # obs_space, action_space, num_outputs,
             model_config, name + "_action_param")
         self.register_variables(self.action_param_model.variables())
@@ -88,7 +88,7 @@ class ParametricActionsModel(DistributionalQTFModel):
         # Extract the available actions tensor from the observation.
 
         print("{} : [INFO] Forward Input Dict {}"
-              .format(datetime.now(), input_dict))
+              .format(datetime.now(), input_dict['obs']['cart']))
 
         action_mask = input_dict["obs"]["action_mask"]
 
