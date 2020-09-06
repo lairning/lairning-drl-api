@@ -5,180 +5,34 @@ from datetime import datetime
 from multiprocessing import Process, ProcessError, Queue
 
 import gym
-from gym.spaces import Space, Discrete, Tuple, Box, Dict, flatten
+from gym.spaces import Space, Discrete, Tuple
 
 from ray.rllib.agents.dqn import DQNTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
-from ray.rllib.agents.dqn.distributional_q_tf_model import DistributionalQTFModel
-from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
 from ray.tune.registry import register_env
-from ray.rllib.models import ModelCatalog
 import ray
+
 import sys
-
-from ray.rllib.utils.framework import try_import_tf
-tf = try_import_tf()
-
-import numpy as np
 
 SERVER_ADDRESS = "localhost"
 PORT = 5010
 AUTHKEY = b'moontedrl!'
 
-def flatten_space(space):
-    """Flatten a space into a single ``Box``.
-    This is equivalent to ``flatten()``, but operates on the space itself. The
-    result always is a `Box` with flat boundaries. The box has exactly
-    ``flatdim(space)`` dimensions. Flattening a sample of the original space
-    has the same effect as taking a sample of the flattenend space.
-    Raises ``NotImplementedError`` if the space is not defined in
-    ``gym.spaces``.
-    Example::
-        >>> box = Box(0.0, 1.0, shape=(3, 4, 5))
-        >>> box
-        Box(3, 4, 5)
-        >>> flatten_space(box)
-        Box(60,)
-        >>> flatten(box, box.sample()) in flatten_space(box)
-        True
-    Example that flattens a discrete space::
-        >>> discrete = Discrete(5)
-        >>> flatten_space(discrete)
-        Box(5,)
-        >>> flatten(box, box.sample()) in flatten_space(box)
-        True
-    Example that recursively flattens a dict::
-        >>> space = Dict({"position": Discrete(2),
-        ...               "velocity": Box(0, 1, shape=(2, 2))})
-        >>> flatten_space(space)
-        Box(6,)
-        >>> flatten(space, space.sample()) in flatten_space(space)
-        True
-    """
-    if isinstance(space, Box):
-        return Box(space.low.flatten(), space.high.flatten())
-    if isinstance(space, Discrete):
-        return Box(low=0, high=1, shape=(space.n, ))
-    if isinstance(space, Tuple):
-        space = [flatten_space(s) for s in space.spaces]
-        return Box(
-            low=np.concatenate([s.low for s in space]),
-            high=np.concatenate([s.high for s in space]),
-        )
-    if isinstance(space, Dict):
-        space = [flatten_space(s) for s in space.spaces.values()]
-        return Box(
-            low=np.concatenate([s.low for s in space]),
-            high=np.concatenate([s.high for s in space]),
-        )
-    if isinstance(space, MultiBinary):
-        return Box(low=0, high=1, shape=(space.n, ))
-    if isinstance(space, MultiDiscrete):
-        return Box(
-            low=np.zeros_like(space.nvec),
-            high=space.nvec,
-        )
-    raise NotImplementedError
 
 class MKTWorld(gym.Env):
     def __init__(self, action_space, observation_space):
         self.action_space = action_space
-        # self.observation_space = observation_space
-        #'''
-        self.observation_space = Dict({
-            "action_mask": Box(0, 1, shape=(action_space.n, )),
-            "cart": observation_space,
-        })
-#'''
-#TODO: Probably to be Removed
-'''
+        self.observation_space = observation_space
+
 class ParametricMKTWorld(gym.Env):
-    def __init__(self, action_space, observation_space, action_mask):
+    def __init__(self, action_space, observation_space):
         self.action_space = action_space
-        self.mktworld = MKTWorld(action_space, observation_space)
-        self.action_mask = action_mask
-        self.observation_space = Dict({
-            "action_mask": Box(0, 1, shape=( self.action_space.n, )),
-            "cart": self.mktworld.observation_space,
-        })
-
-    def reset(self):
-        return {
-            "action_mask": self.action_mask[0],
-            "cart": self.mktworld.reset()
-        }
-
-    def step(self, action):
-        orig_obs, rew, done, info = self.mktworld.step(action)
-        obs = {
-
-        }
-'''
-
-class FlattenObservation(gym.ObservationWrapper):
-    r"""Observation wrapper that flattens the observation."""
-    def __init__(self, env):
-        super(FlattenObservation, self).__init__(env)
-        self.observation_space = flatten_space(env.observation_space)
-
-    def observation(self, observation):
-        return flatten(self.env.observation_space, observation)
-
-observation_space_flatten = None
-
-class ParametricActionsModel(DistributionalQTFModel):
-    def __init__(self,
-                 obs_space,
-                 action_space,
-                 num_outputs,
-                 model_config,
-                 name,
-                 **kw):
-
-        print("{} : [INFO] ParametricActionsModel {}, {}, {}, {}"
-              .format(datetime.now(),action_space, obs_space, num_outputs, name))
-
-        super(ParametricActionsModel, self).__init__(
-            obs_space, action_space, 6, model_config, name, **kw)
-            # observation_space, action_space, num_outputs, model_config, name, **kw)
-
-        # print("{} : [INFO] ParametricActionsModel Super Done!"
-        #      .format(datetime.now()))
-
-        self.action_param_model = FullyConnectedNetwork(
-            flatten_space(Tuple((Discrete(17), Discrete(3), Discrete(2), Discrete(5)))), action_space, 6,
-            # obs_space, action_space, num_outputs,
-            model_config, name + "_action_param")
-        self.register_variables(self.action_param_model.variables())
-
-    def forward(self, input_dict, state, seq_lens):
-        # Extract the available actions tensor from the observation.
-
-        print("{} : [INFO] Forward Input Dict {}"
-              .format(datetime.now(), input_dict['obs']['cart']))
-
-        action_mask = input_dict["obs"]["action_mask"]
-
-        global observation_space_flatten
-
-        # Compute the predicted action embedding
-        action_param, _ = self.action_param_model({
-            "obs": observation_space_flatten.observation(input_dict["obs"]["cart"])
-        })
-
-        # Mask out invalid actions (use tf.float32.min for stability)
-        inf_mask = tf.maximum(tf.log(action_mask), tf.float32.min)
-        return action_param + inf_mask, state
-
-    def value_function(self):
-        return self.action_param_model.value_function()
-
+        self.observation_space = observation_space
 
 def drl_trainer(
         log_file: str,
         input_port: int,
-        action_space: Space, # A Discrete Space with Max Available Actions across all the Touch Points
-        # action_mask: dict,   # Dict containing a Mask for each Touch Point
+        action_space: Space,
         observation_space: Space,
         dqn_config: dict,
         q: Queue):
@@ -197,25 +51,12 @@ def drl_trainer(
 
         ray.init()
 
-        global observation_space_flatten
-
-        observation_space_flatten = FlattenObservation(MKTWorld(action_space, observation_space))
-
         register_env("srv", lambda _: MKTWorld(action_space, observation_space))
 
-        print("{} : [INFO] DRL Trainer MKTWorld Env Registered {},{}"
-              .format(datetime.now(),action_space, observation_space))
-
-        ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
-
-        #dqn_config.update(
-        dqn_config = {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
-             "model": {"custom_model": "ParametricActionsModel"},
+        dqn_config.update(
+            {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
              "num_workers": 0,
-             "input_evaluation": []}
-
-        print("{} : [INFO] DRL Trainer ParametricActionsModel Registered {}"
-              .format(datetime.now(),dqn_config))
+             "input_evaluation": []})
 
         dqn = DQNTrainer(
             env="srv",
@@ -227,7 +68,6 @@ def drl_trainer(
         q.put(False)
         print("{} : [ERROR] DRL Trainer {}"
               .format(datetime.now(), err))
-        raise err
 
     q.put(True)
 
@@ -276,8 +116,6 @@ class DRLServer:
         try:
             action_space = myspace2gymspace(payload['action_space'])
             observation_space = myspace2gymspace(payload['observation_space'])
-            # action_mask = payload['action_mask'],
-            model_config = payload['model_config']
         except Exception as err:
             print("{} : [ERROR CREATING GYM SPACES] {}}"
                   .format(datetime.now(), err))
@@ -287,9 +125,8 @@ class DRLServer:
             trainer_log_file,
             PORT + self.trainer_id,
             action_space,
-            # action_mask,
             observation_space,
-            model_config,
+            payload['model_config'],
             self.queue
         )
         print("{} : [INFO] DRL Server is about to start a new DRL Trainer"
