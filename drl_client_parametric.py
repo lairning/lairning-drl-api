@@ -253,7 +253,7 @@ if __name__ == "__main__":
         print("{} : Iteration {} - Mean Reward = {}"
               .format(datetime.now(), i, total / count))
 
-    STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
+    STOP_TRAINER_URL = 'http://localhost:5003/v1/drl/server/stop'
 
     print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
 
