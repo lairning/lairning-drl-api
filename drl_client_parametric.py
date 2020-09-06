@@ -206,7 +206,7 @@ class DRLTrainer:
 
 if __name__ == "__main__":
 
-    START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
+    START_TRAINER_URL = 'http://localhost:5003/v1/drl/server/start'
 
     start_msg = {'action_space': json.dumps(ACTION_SPACE),
                  'observation_space': json.dumps(OBSERVATION_SPACE),
