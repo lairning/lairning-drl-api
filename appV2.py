@@ -19,7 +19,7 @@ DATABASE_PWD = os.environ.get("DATABASE_PWD", "root")
 DATABASE_NAME = os.environ.get("DATABASE_NAME", "Pocosi12!")
 DATABASE_FILE = os.environ.get("DATABASE_FILE", "database.sqlite")
 JWT_SECRET = os.environ.get("JWT_SECRET", "Pocosi12!")
-PORT = 5003
+PORT = 4999
 
 '''
 print(f"DATABASE_TYPE: {DATABASE_TYPE}")
