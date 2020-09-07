@@ -107,16 +107,16 @@ class ParametricActionsModel(DistributionalQTFModel):
         super(ParametricActionsModel, self).__init__(
             obs_space, action_space, num_outputs, model_config, name, **kw)
 
-        print("{} : [INFO] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}"
+        print("{} : [DEBUG] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}"
              .format(datetime.now(),action_space, obs_space, num_outputs, name))
 
-        self.flatten = FlattenObservation(obs_space['cart'])
+        model_observation_space = Box(low=0, high=1, shape=(obs_space-action_space.n,))
 
-        print("{} : [INFO] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}, ObsSFlat{}"
-             .format(datetime.now(),action_space, obs_space, num_outputs, name, self.flatten.observation_space))
+        print("{} : [DEBUG] ParametricActionsModel {}"
+             .format(datetime.now(),action_space, obs_space, num_outputs, name))
 
         self.action_param_model = FullyConnectedNetwork(
-            self.flatten.observation_space, action_space, num_outputs,
+            model_observation_space, action_space, num_outputs,
             model_config, name + "_action_param")
 
         self.register_variables(self.action_param_model.variables())
@@ -130,7 +130,7 @@ class ParametricActionsModel(DistributionalQTFModel):
 
         # Compute the predicted action embedding
         action_param, _ = self.action_param_model({
-            "obs": self.flatten.observation(input_dict["obs"]["card"])
+            "obs": input_dict["obs"]["card"]
         })
 
         # Mask out invalid actions (use tf.float32.min for stability)
