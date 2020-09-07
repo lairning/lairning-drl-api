@@ -89,11 +89,13 @@ class FlattenObservation(gym.ObservationWrapper):
 class ParametricMKTWorld(gym.Env):
     def __init__(self, action_space: Discrete, observation_space: Tuple):
         self.action_space = action_space
-        self.observation_space = observation_space
         self.observation_space = Dict({
             "cart": observation_space,
             "action_mask": Box(low=0, high=1, shape=(action_space.n,))
         })
+
+        print("{} : [DEBUG] KTWorld ActS={}, ObsS={}"
+             .format(datetime.now(),action_space, observation_space))
 
 class ParametricActionsModel(DistributionalQTFModel):
     def __init__(self,
