@@ -24,11 +24,6 @@ class MKTWorld(gym.Env):
         self.action_space = action_space
         self.observation_space = observation_space
 
-class ParametricMKTWorld(gym.Env):
-    def __init__(self, action_space, observation_space):
-        self.action_space = action_space
-        self.observation_space = observation_space
-
 def drl_trainer(
         log_file: str,
         input_port: int,
