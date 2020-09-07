@@ -15,6 +15,7 @@ from ray.tune.registry import register_env
 import ray
 
 from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
+from ray.rllib.models.catalog import ModelCatalog
 from ray.rllib.agents.dqn.distributional_q_tf_model import DistributionalQTFModel
 from ray.rllib.utils.framework import try_import_tf
 
@@ -139,8 +140,8 @@ class ParametricActionsModel(DistributionalQTFModel):
 def drl_trainer(
         log_file: str,
         input_port: int,
-        action_space: Space,
-        observation_space: Space,
+        action_space: Discrete,
+        observation_space: Tuple,
         dqn_config: dict,
         q: Queue):
     # Replace file descriptors for stdin, stdout, and stderr
@@ -160,10 +161,16 @@ def drl_trainer(
 
         register_env("srv", lambda _: ParametricMKTWorld(action_space, observation_space))
 
+        ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
+
         dqn_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
+             "model": {"custom_model": "ParametricActionsModel"},
              "num_workers": 0,
-             "input_evaluation": []})
+             "input_evaluation": [],
+             "hiddens": [],
+             "dueling": False
+             })
 
         dqn = DQNTrainer(
             env="srv",
