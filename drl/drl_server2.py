@@ -130,7 +130,7 @@ class ParametricActionsModel(DistributionalQTFModel):
 
         # Compute the predicted action embedding
         action_param, _ = self.action_param_model({
-            "obs": input_dict["obs"]["card"]
+            "obs": input_dict["obs"]["cart"]
         })
 
         # Mask out invalid actions (use tf.float32.min for stability)
