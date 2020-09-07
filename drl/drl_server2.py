@@ -114,9 +114,13 @@ class ParametricActionsModel(DistributionalQTFModel):
         self.action_param_model = FullyConnectedNetwork(
             self.flatten.observation_space, action_space, num_outputs,
             model_config, name + "_action_param")
+
         self.register_variables(self.action_param_model.variables())
 
     def forward(self, input_dict, state, seq_lens):
+
+        print("{} : [INFO] ParametricActionsModel Input Obs {}"
+             .format(datetime.now(),input_dict["obs"]))
         # Extract the available actions tensor from the observation.
         action_mask = input_dict["obs"]["action_mask"]
 

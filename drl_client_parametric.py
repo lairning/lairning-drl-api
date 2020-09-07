@@ -244,6 +244,7 @@ if __name__ == "__main__":
             done = False
             reward = 0
             while not done:
+                print("Observation:", obs)
                 action = drl_trainer.get_action(eid, obs)
                 obs, reward, done, info = world.step(action)
                 drl_trainer.log_returns(eid, reward, info=info)
