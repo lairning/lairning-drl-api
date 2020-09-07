@@ -124,13 +124,13 @@ class ParametricActionsModel(DistributionalQTFModel):
     def forward(self, input_dict, state, seq_lens):
 
         print("{} : [INFO] ParametricActionsModel Input_Dict['obs']['cart'] {}"
-             .format(datetime.now(),tf.concat(input_dict["obs"]['cart'],1)))
+             .format(datetime.now(),tf.concat(input_dict["obs"]['cart'], 1)))
         # Extract the available actions tensor from the observation.
         action_mask = input_dict["obs"]["action_mask"]
 
         # Compute the predicted action embedding
         action_param, _ = self.action_param_model({
-            "obs": tf.concat(input_dict["obs"]["cart"])
+            "obs": tf.concat(input_dict["obs"]["cart"], 1)
         })
 
         # Mask out invalid actions (use tf.float32.min for stability)
