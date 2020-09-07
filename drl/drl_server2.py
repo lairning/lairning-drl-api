@@ -107,6 +107,9 @@ class ParametricActionsModel(DistributionalQTFModel):
         super(ParametricActionsModel, self).__init__(
             obs_space, action_space, num_outputs, model_config, name, **kw)
 
+        print("{} : [INFO] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}"
+             .format(datetime.now(),action_space, obs_space, num_outputs, name))
+
         self.flatten = FlattenObservation(obs_space['cart'])
 
         print("{} : [INFO] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}, ObsSFlat{}"
