@@ -167,6 +167,7 @@ class DRLTrainer:
             "reward": reward,
             "info": info,
             "episode_id": episode_id,
+            "done": None
         })
 
     def end_episode(self, episode_id: str, observation: object):
