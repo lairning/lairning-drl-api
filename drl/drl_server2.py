@@ -29,7 +29,7 @@ class ParametricMKTWorld(gym.Env):
     def __init__(self, action_space: Discrete, observation_space: Box):
         self.action_space = action_space
         self.observation_space = Dict({
-            "cart": observation_space,
+            "state": observation_space,
             "action_mask": Box(low=0, high=1, shape=(action_space.n,))
         })
 
@@ -69,7 +69,7 @@ class ParametricActionsModel(DistributionalQTFModel):
 
         # Compute the predicted action embedding
         action_param, _ = self.action_param_model({
-            "obs": input_dict["obs"]["cart"]
+            "obs": input_dict["obs"]["state"]
         })
 
         # Mask out invalid actions (use tf.float32.min for stability)
