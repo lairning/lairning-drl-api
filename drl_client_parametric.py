@@ -191,7 +191,6 @@ dqn_config = {
     "v_min": -5,
     "v_max": 135.0,
     'lr'                     : 5e-5,
-    "num_atoms"              : 2,
     "learning_starts"        : 100,
     "timesteps_per_iteration": 500
 
