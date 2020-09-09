@@ -14,7 +14,7 @@ from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.tune.registry import register_env
 import ray
 
-from ray.rllib.models.tf.fcnet_v2 import FullyConnectedNetwork
+from ray.rllib.models.tf.fcnet import FullyConnectedNetwork
 from ray.rllib.models.catalog import ModelCatalog
 from ray.rllib.agents.dqn.distributional_q_tf_model import DistributionalQTFModel
 from ray.rllib.utils.framework import try_import_tf
@@ -64,8 +64,6 @@ class ParametricActionsModel(DistributionalQTFModel):
 
     def forward(self, input_dict, state, seq_lens):
 
-        print("{} : [INFO] ParametricActionsModel Input_Dict['obs']['cart'] {}"
-             .format(datetime.now(),input_dict["obs"]['cart']))
         # Extract the available actions tensor from the observation.
         action_mask = input_dict["obs"]["action_mask"]
 
