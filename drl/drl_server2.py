@@ -110,7 +110,7 @@ def drl_trainer(
              "model": {"custom_model": "ParametricActionsModel"},
              "num_workers": 0,
              "input_evaluation": [],
-             "hiddens": [],
+             #"hiddens": [],
              "dueling": False
              })
 

@@ -187,13 +187,14 @@ dqn_config = {
 }
 '''
 
+# "num_atoms"  Cannot be set with parametric
 dqn_config = {
     "v_min": -5,
     "v_max": 135.0,
+    "hiddens": [128],
     'lr'                     : 5e-5,
     "learning_starts"        : 100,
     "timesteps_per_iteration": 500
-
 }
 
 # Commands for remote inference mode.
