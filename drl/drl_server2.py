@@ -7,7 +7,7 @@ from datetime import datetime
 from multiprocessing import Process, ProcessError, Queue
 
 import gym
-from gym.spaces import Space, Discrete, Tuple, Box, Dict, flatten
+from gym.spaces import Discrete, Tuple, Box, Dict, flatten
 
 from ray.rllib.agents.dqn import DQNTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
@@ -23,71 +23,10 @@ SERVER_ADDRESS = "localhost"
 PORT = 5010
 AUTHKEY = b'moontedrl!'
 
-tf = try_import_tf()
-
-def flatten_space(space):
-    """Flatten a space into a single ``Box``.
-    This is equivalent to ``flatten()``, but operates on the space itself. The
-    result always is a `Box` with flat boundaries. The box has exactly
-    ``flatdim(space)`` dimensions. Flattening a sample of the original space
-    has the same effect as taking a sample of the flattenend space.
-    Raises ``NotImplementedError`` if the space is not defined in
-    ``gym.spaces``.
-    Example::
-        >>> box = Box(0.0, 1.0, shape=(3, 4, 5))
-        >>> box
-        Box(3, 4, 5)
-        >>> flatten_space(box)
-        Box(60,)
-        >>> flatten(box, box.sample()) in flatten_space(box)
-        True
-    Example that flattens a discrete space::
-        >>> discrete = Discrete(5)
-        >>> flatten_space(discrete)
-        Box(5,)
-        >>> flatten(box, box.sample()) in flatten_space(box)
-        True
-    Example that recursively flattens a dict::
-        >>> space = Dict({"position": Discrete(2),
-        ...               "velocity": Box(0, 1, shape=(2, 2))})
-        >>> flatten_space(space)
-        Box(6,)
-        >>> flatten(space, space.sample()) in flatten_space(space)
-        True
-    """
-    if isinstance(space, Box):
-        return Box(space.low.flatten(), space.high.flatten())
-    if isinstance(space, Discrete):
-        return Box(low=0, high=1, shape=(space.n, ))
-    if isinstance(space, Tuple):
-        space = [flatten_space(s) for s in space.spaces]
-        return Box(
-            low=np.concatenate([s.low for s in space]),
-            high=np.concatenate([s.high for s in space]),
-        )
-    if isinstance(space, Dict):
-        space = [flatten_space(s) for s in space.spaces.values()]
-        return Box(
-            low=np.concatenate([s.low for s in space]),
-            high=np.concatenate([s.high for s in space]),
-        )
-    raise NotImplementedError
-
-class FlattenObservation(gym.ObservationWrapper):
-    r"""Observation wrapper that flattens the observation."""
-    def __init__(self, env):
-        super(FlattenObservation, self).__init__(env)
-        self.observation_space = flatten_space(env.observation_space)
-
-    def observation(self, observation):
-        return flatten(self.env.observation_space, observation)
-
-# FLAT_OBS It will be initialized in the DRL TRainer and used inside ParametricActionsModel
-# Ideally it should be passed as
-# FLAT_OBS = None
+tf1, tf, tfv = try_import_tf()
 
 class ParametricMKTWorld(gym.Env):
-    def __init__(self, action_space: Discrete, observation_space: Tuple):
+    def __init__(self, action_space: Discrete, observation_space: Box):
         self.action_space = action_space
         self.observation_space = Dict({
             "cart": observation_space,
@@ -146,7 +85,7 @@ def drl_trainer(
         log_file: str,
         input_port: int,
         action_space: Discrete,
-        observation_space: Tuple,
+        observation_space: Box,
         dqn_config: dict,
         q: Queue):
     # Replace file descriptors for stdin, stdout, and stderr
@@ -164,7 +103,7 @@ def drl_trainer(
 
         ray.init()
 
-        register_env("srv", lambda _: ParametricMKTWorld(action_space, observation_space))
+        register_env("env", lambda _: ParametricMKTWorld(action_space, observation_space))
 
         ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
 
@@ -178,7 +117,7 @@ def drl_trainer(
              })
 
         dqn = DQNTrainer(
-            env="srv",
+            env="env",
             config=dqn_config
         )
         print("{} : [INFO] DRL Trainer Configured at {}:{}"
@@ -214,15 +153,6 @@ def drl_trainer(
             print(e)
         i += 1
 
-
-def myspace2gymspace(space: dict):
-    if space['type'] == 'Discrete':
-        return Discrete(space['value'])
-    if space['type'] == 'Tuple':
-        return Tuple(tuple(myspace2gymspace(s) for s in space['value']))
-    raise "Invalid Space Type = {}".format(space['type'])
-
-
 class DRLServer:
     def __init__(self):
         self.trainer_id = 1
@@ -234,8 +164,8 @@ class DRLServer:
         # Log file fo the new DRL Trainer
         trainer_log_file = '/tmp/drltrainer_{}_{:%Y-%m-%d_%H:%M:%S%f}.log'.format(self.trainer_id, datetime.now())
         try:
-            action_space = myspace2gymspace(payload['action_space'])
-            observation_space = myspace2gymspace(payload['observation_space'])
+            action_space = Discrete(payload['action_space_size'])
+            observation_space = Box(low=0, high=1, shape=(payload['observation_space_size'],), dtype=np.int64)
         except Exception as err:
             print("{} : [ERROR CREATING GYM SPACES] {}}"
                   .format(datetime.now(), err))

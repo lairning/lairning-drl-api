@@ -1,60 +1,83 @@
 import numpy as np
 import itertools
 from datetime import datetime
-
 import requests
-
 import pickle
 import json
 
-MKT_TEMPLATES = {'campaign':['eMail','callCenter'],
-                'eMail':['mail1','mail2','mail3','mail4'],
-                 'webDiscount':['discount1','discount2','discount3','discount4'],
-                  'webPremium':['premium1','premium2','premium3','premium4'],
-                'callCenter':['script1','script2','script3','script4','script5','script6'],
-                    'purchase':['purchase'],
-                 'voucher':['voucher'],
-              'voucherDiscount':['discount1','discount2','discount3','discount4'],
-              'voucherVip':['vip1','vip2','vip3']}
+import gym
+from gym.spaces import Discrete, Tuple, Dict, Box, flatten
+
+def flatten_space(space):
+    """Flatten a space into a single ``Box``.
+    This is equivalent to ``flatten()``, but operates on the space itself. The
+    result always is a `Box` with flat boundaries. The box has exactly
+    ``flatdim(space)`` dimensions. Flattening a sample of the original space
+    has the same effect as taking a sample of the flattenend space.
+    Raises ``NotImplementedError`` if the space is not defined in
+    ``gym.spaces``.
+    Example::
+        >>> box = Box(0.0, 1.0, shape=(3, 4, 5))
+        >>> box
+        Box(3, 4, 5)
+        >>> flatten_space(box)
+        Box(60,)
+        >>> flatten(box, box.sample()) in flatten_space(box)
+        True
+    Example that flattens a discrete space::
+        >>> discrete = Discrete(5)
+        >>> flatten_space(discrete)
+        Box(5,)
+        >>> flatten(box, box.sample()) in flatten_space(box)
+        True
+    Example that recursively flattens a dict::
+        >>> space = Dict({"position": Discrete(2),
+        ...               "velocity": Box(0, 1, shape=(2, 2))})
+        >>> flatten_space(space)
+        Box(6,)
+        >>> flatten(space, space.sample()) in flatten_space(space)
+        True
+    """
+    if isinstance(space, Box):
+        return Box(space.low.flatten(), space.high.flatten())
+    if isinstance(space, Discrete):
+        return Box(low=0, high=1, shape=(space.n, ))
+    if isinstance(space, Tuple):
+        space = [flatten_space(s) for s in space.spaces]
+        return Box(
+            low=np.concatenate([s.low for s in space]),
+            high=np.concatenate([s.high for s in space]),
+        )
+    if isinstance(space, Dict):
+        space = [flatten_space(s) for s in space.spaces.values()]
+        return Box(
+            low=np.concatenate([s.low for s in space]),
+            high=np.concatenate([s.high for s in space]),
+        )
+    raise NotImplementedError
+
+MKT_TEMPLATES = {'eMail':['mail1','mail2','mail3','mail4'],
+                 'webDiscount':['discount1','discount2','discount3'],
+                 'webPremium':['premium1','premium2','premium3','premium4','premium5'],
+                'callCenter':['script1','script2','script3','script4','script5','script6']}
+
+MKT_REWARDS = { 'email do nothing':-0.5,
+                'call do nothing':-5,
+                'call discount purchase':75,
+                'call premium purchase':130,
+                'web discount purchase':80,
+                'web premium purchase':135}
+
+CUSTOMER_BEHAVIOR = {'eMail':['email do nothing', 'callCenter', 'webDiscount','webPremium'],
+                     'webDiscount':['email do nothing','webPremium','web discount purchase'],
+                     'webPremium':['email do nothing','webDiscount','web premium purchase','callCenter'],
+                     'callCenter':['call do nothing','call discount purchase','call premium purchase']
+                     }
 
 CUSTOMER_ATTRIBUTES = {'age': ['<25', '25-45', '>45'],
                        'sex': ['Men', 'Women'],
                        'region': ['Lisbon', 'Oporto', 'North', 'Center', 'South']}
 
-MKT_REWARDS = { 'email do nothing':-0.5,
-                'email discount purchase':70,
-                'email premium purchase':120,
-                    'call do nothing':-5,
-                'call discount purchase':75,
-                'call premium purchase':130,
-                'voucher discount purchase':65,
-                'voucher premium purchase':115}
-
-CUSTOMER_BEHAVIOR = {'campaign':['eMail','callCenter'],
-                     'eMail':['email do nothing','webDiscount','webPremium'],
-                     'webDiscount':['email do nothing','webPremium','email discount purchase'],
-                     'webPremium':['email do nothing','webDiscount','email premium purchase'],
-                     'callCenter':['email do nothing','voucher','purchase'],
-                     'voucher':['voucherDiscount','voucherVip'],
-                     'purchase':['call discount purchase', 'call premium purchase'],
-                     'voucherDiscount':['call do nothing','voucher discount purchase'],
-                     'voucherVip':['call do nothing','voucher premium purchase']
-                    }
-
-
-def space_discrete(n: int):
-    return {'type': 'Discrete', 'value': n}
-
-def space_tuple(t: tuple):
-    return {'type': 'Tuple', 'value': t}
-
-
-ACTION_SPACE = space_discrete(max([len(options) for options in MKT_TEMPLATES.values()]))
-
-tp_size = len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys())
-OBSERVATION_TUPLE = ((space_discrete(tp_size)),)
-OBSERVATION_TUPLE += tuple((space_discrete(len(val_list)) for val_list in CUSTOMER_ATTRIBUTES.values()))
-OBSERVATION_SPACE = space_tuple(OBSERVATION_TUPLE)
 
 def _get_action_mask(actions: list, max_actions: int):
     action_mask = [0] * max_actions
@@ -63,14 +86,35 @@ def _get_action_mask(actions: list, max_actions: int):
     return action_mask
 
 tp_actions = MKT_TEMPLATES
-mask_size = max([len(options) for options in MKT_TEMPLATES.values()])
-
-action_mask = {tp_id: _get_action_mask(tp_actions[tp], mask_size) for tp_id, tp
+max_action_size = max([len(options) for options in MKT_TEMPLATES.values()])
+action_mask = {tp_id: _get_action_mask(tp_actions[tp], max_action_size) for tp_id, tp
                in enumerate(tp_actions.keys())}
 
-class MKTWorld:
+FLAT_OBSERVATION_SPACE = Box(low=0, high=1, shape=(20,), dtype=np.int64)
+REAL_OBSERVATION_SPACE = Tuple((Discrete(10), Discrete(3), Discrete(2), Discrete(5)))
 
+class FlattenObservation(gym.ObservationWrapper):
+    r"""Observation wrapper that flattens the observation."""
+    def __init__(self, env):
+        super(FlattenObservation, self).__init__(env)
+        self.observation_space = flatten_space(env.observation_space['state'])
+
+    def observation(self, observation):
+        return flatten(self.env.observation_space['state'], observation)
+
+class MKTEnv(gym.Env):
+    def __init__(self):
+        self.action_space = Discrete(max_action_size)
+        self.observation_space = Dict({
+            "state": REAL_OBSERVATION_SPACE,
+            "action_mask": Box(low=0, high=1, shape=(max_action_size,))
+        })
+
+flat = FlattenObservation(MKTEnv())
+
+class MKTWorld(MKTEnv):
     def __init__(self, config):
+        super(MKTWorld, self).__init__()
         self.probab = dict()
         self.rewards = config["mkt_rewards"]
         self.journeys = config["customer_journeys"]
@@ -87,8 +131,10 @@ class MKTWorld:
                 dt[t] = {mo: np.random.dirichlet(np.ones(len(self.journeys[t])), size=1)[0] for mo in
                          self.mkt_offers[t]}
             self.probab[cs] = dt
-        # self.action_space = ACTION_SPACE
-        # self.observation_space = OBSERVATION_SPACE
+        self.observation_space = Dict({
+            "state": FLAT_OBSERVATION_SPACE,
+            "action_mask": Box(low=0, high=1, shape=(max_action_size,))
+        })
 
     def random_customer(self):
         cs = self.customer_segments[np.random.randint(len(self.customer_segments))]
@@ -102,9 +148,9 @@ class MKTWorld:
         for i,_ in enumerate(CUSTOMER_ATTRIBUTES.keys()):
             self.observation[i+1] = self.customer_values[i].index(cs[customer_feature[i]])
 
-        return {'action_mask': action_mask[0], 'cart': self.observation}
+        return {'action_mask': action_mask[0], 'state': flat.observation(self.observation)}
 
-    def step(self, action):
+    def step(self, action: int):
         touch_point = self.touch_points[self.observation[0]]
         assert action < len(self.mkt_offers[touch_point]), \
             "Action={}, TP={}, OFFERS={}".format(action, touch_point, self.mkt_offers[touch_point])
@@ -116,8 +162,8 @@ class MKTWorld:
         self.observation[0] = self.touch_points.index(new_touch_point)
         done = new_touch_point in self.rewards.keys()
         reward = self.rewards[new_touch_point] if done else 0
-        return {'action_mask': action_mask[self.observation[0]], 'cart': self.observation}, reward, done, {}
-
+        return {'action_mask': action_mask[self.observation[0]] if not done else [1]*max_action_size, 'state': flat.observation(
+            self.observation)}, reward, done, {}
 
 env_config = {
     "mkt_rewards": MKT_REWARDS,
@@ -126,6 +172,7 @@ env_config = {
     "mkt_offers": MKT_TEMPLATES
 }
 
+'''
 dqn_config = {
     "v_min": -1.0,
     "v_max": 5.0,
@@ -137,6 +184,13 @@ dqn_config = {
     "num_atoms": 2,
     "learning_starts": 100,
     "timesteps_per_iteration": 500
+}
+'''
+
+dqn_config = {
+    "v_min": -5,
+    "v_max": 135.0,
+    "learning_starts": 100,
 }
 
 # Commands for remote inference mode.
@@ -209,8 +263,8 @@ if __name__ == "__main__":
 
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
 
-    start_msg = {'action_space': json.dumps(ACTION_SPACE),
-                 'observation_space': json.dumps(OBSERVATION_SPACE),
+    start_msg = {'action_space_size': max_action_size,
+                 'observation_space_size': 20,
                  'model_config': json.dumps(dqn_config)
                  }
 
