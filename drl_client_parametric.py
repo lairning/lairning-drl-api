@@ -97,8 +97,8 @@ flat_observation_space_size = len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys()
 
 FLAT_OBSERVATION_SPACE = Box(low=0, high=1, shape=(flat_observation_space_size,), dtype=np.int64)
 real_obs_tuple = (Discrete(len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys())),)
-real_obs_tuple += ((Discrete(len(l)) for l in CUSTOMER_ATTRIBUTES.values()))
-real_obs_tuple += ((Discrete(len(l)) for l in CONTEXT_ATTRIBUTES.values()))
+real_obs_tuple += tuple((Discrete(len(l)) for l in CUSTOMER_ATTRIBUTES.values()))
+real_obs_tuple += tuple((Discrete(len(l)) for l in CONTEXT_ATTRIBUTES.values()))
 
 REAL_OBSERVATION_SPACE = Tuple(real_obs_tuple)
 
