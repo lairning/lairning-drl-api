@@ -78,6 +78,7 @@ CUSTOMER_ATTRIBUTES = {'age': ['<25', '25-45', '>45'],
                        'sex': ['Men', 'Women'],
                        'region': ['Lisbon', 'Oporto', 'North', 'Center', 'South']}
 
+CONTEXT_ATTRIBUTES = {}
 
 def _get_action_mask(actions: list, max_actions: int):
     action_mask = [0] * max_actions
@@ -90,8 +91,16 @@ max_action_size = max([len(options) for options in MKT_TEMPLATES.values()])
 action_mask = {tp_id: _get_action_mask(tp_actions[tp], max_action_size) for tp_id, tp
                in enumerate(tp_actions.keys())}
 
-FLAT_OBSERVATION_SPACE = Box(low=0, high=1, shape=(20,), dtype=np.int64)
-REAL_OBSERVATION_SPACE = Tuple((Discrete(10), Discrete(3), Discrete(2), Discrete(5)))
+flat_observation_space_size = len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys()) + \
+                              sum([len(l) for l in CUSTOMER_ATTRIBUTES.values()]) + \
+                              sum([len(l) for l in CONTEXT_ATTRIBUTES.values()])
+
+FLAT_OBSERVATION_SPACE = Box(low=0, high=1, shape=(flat_observation_space_size,), dtype=np.int64)
+real_obs_tuple = (Discrete(len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys())),)
+real_obs_tuple += ((Discrete(len(l)) for l in CUSTOMER_ATTRIBUTES.values()))
+real_obs_tuple += ((Discrete(len(l)) for l in CONTEXT_ATTRIBUTES.values()))
+
+REAL_OBSERVATION_SPACE = Tuple(real_obs_tuple)
 
 class FlattenObservation(gym.ObservationWrapper):
     r"""Observation wrapper that flattens the observation."""
@@ -268,7 +277,7 @@ if __name__ == "__main__":
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
 
     start_msg = {'action_space_size': max_action_size,
-                 'observation_space_size': 20,
+                 'observation_space_size': flat_observation_space_size,
                  'model_config': json.dumps(dqn_config)
                  }
 
