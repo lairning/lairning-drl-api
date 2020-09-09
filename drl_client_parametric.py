@@ -190,7 +190,15 @@ dqn_config = {
 dqn_config = {
     "v_min": -5,
     "v_max": 135.0,
-    "learning_starts": 100,
+    "hiddens"                : [128],
+    "exploration_config"     : {
+        "epsilon_timesteps": 4000,
+    },
+    'lr'                     : 5e-5,
+    "num_atoms"              : 2,
+    "learning_starts"        : 100,
+    "timesteps_per_iteration": 500
+
 }
 
 # Commands for remote inference mode.
