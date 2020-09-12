@@ -291,7 +291,7 @@ if __name__ == "__main__":
 
     # Run DQN and PPO Models
 
-    for model in ['Apex', 'SimpleQ']:
+    for model in ['SimpleQ']:
 
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,
