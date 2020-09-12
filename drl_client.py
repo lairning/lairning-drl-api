@@ -225,7 +225,7 @@ if __name__ == "__main__":
         start_msg = {'action_space': json.dumps(ACTION_SPACE),
                      'observation_space': json.dumps(OBSERVATION_SPACE),
                      'model_type': model,
-                     'model_config': json.dumps(dqn_config)
+                     'model_config': json.dumps(model_config[model])
                      }
 
         msg = requests.post(START_TRAINER_URL, data=start_msg)
@@ -244,8 +244,8 @@ if __name__ == "__main__":
 
         trainer_id = msg['id']
         trainer_address = msg['address']
-        print("{} : Trainer Created with ID={}, and ADDRESS={}".
-              format(datetime.now(), trainer_id, trainer_address))
+        print("{} : {} Trainer Created with ID={}, and ADDRESS={}".
+              format(datetime.now(), model, trainer_id, trainer_address))
 
         world = MKTWorld(env_config)
         drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
@@ -265,8 +265,8 @@ if __name__ == "__main__":
                 drl_trainer.end_episode(eid, obs)
                 count += 1
                 total += reward
-            print("{} : Iteration {} - Mean Reward = {}"
-                  .format(datetime.now(), i, total / count))
+            print("{} : Model {} Iteration {} - Mean Reward = {}"
+                  .format(datetime.now(), model, i, total / count))
 
 
         print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
