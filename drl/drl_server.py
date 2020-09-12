@@ -31,7 +31,7 @@ class MKTWorld(gym.Env):
         self.observation_space = observation_space
 
 trainers = {'DQN': DQNTrainer, 'PPO':PPOTrainer, 'APPO':APPOTrainer, 'Apex': ApexTrainer, 'SimpleQ':SimpleQTrainer,
-            'Impala': ImpalaTrainer, 'SAC':SACTrainer, 'A3C': A3CTrainer, 'DDPG': DDPGTrainer}
+            'Impala': ImpalaTrainer, 'SAC':SACTrainer, 'A3C': A3CTrainer}
 
 def drl_trainer(
         log_file: str,

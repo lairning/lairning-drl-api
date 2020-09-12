@@ -142,10 +142,6 @@ model_config = {
             "fcnet_hiddens"     : [128],
         },
     },
-    'DDPG': {
-        "actor_hiddens": [128],
-        "critic_hiddens": [128],
-    },
     'SimpleQ': {
         "exploration_config": {
             "epsilon_timesteps": 2000
@@ -226,7 +222,7 @@ if __name__ == "__main__":
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    for model in model_config.keys():
+    for model in ['SimpleQ','DQN']:
 
         start_msg = {'action_space': json.dumps(ACTION_SPACE),
                      'observation_space': json.dumps(OBSERVATION_SPACE),
