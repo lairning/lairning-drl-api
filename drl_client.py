@@ -106,18 +106,48 @@ env_config = {
     "mkt_offers": MKT_TEMPLATES
 }
 
-dqn_config = {
-    "v_min": -5.0,
-    "v_max": 135.0,
-    "hiddens": [128],
-    "exploration_config": {
-        "epsilon_timesteps": 4000,
+model_config = {
+    'DQN': {
+        "v_min": -5.0,
+        "v_max": 135.0,
+        "hiddens": [128],
+        "exploration_config": {
+            "epsilon_timesteps": 4000,
+        },
+        'lr': 5e-5,
+        "num_atoms": 2,
+        "learning_starts": 100,
+        "timesteps_per_iteration": 500
     },
-    'lr': 5e-5,
-    "num_atoms": 2,
-    "learning_starts": 100,
-    "timesteps_per_iteration": 500
+    'Apex': {
+        "v_min": -5.0,
+        "v_max": 135.0,
+        "hiddens": [128],
+        "exploration_config": {
+            "epsilon_timesteps": 4000,
+        },
+        'lr': 5e-5,
+        "num_atoms": 2,
+        "learning_starts": 100,
+        "timesteps_per_iteration": 500
+    },
+    'PPO' : {},
+    'APPO' : {},
+    'Impala': {},
+    'SAC' : {
+        "Q_model": {
+            "fcnet_hiddens"     : [128],
+        },
+        "policy_model": {
+            "fcnet_hiddens"     : [128],
+        },
+    },
+    'DDPG': {
+        "actor_hiddens": [128],
+        "critic_hiddens": [128],
+    }
 }
+
 
 # Commands for remote inference mode.
 START_EPISODE = "START_EPISODE"
@@ -188,58 +218,61 @@ class DRLTrainer:
 if __name__ == "__main__":
 
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
-
-    start_msg = {'action_space': json.dumps(ACTION_SPACE),
-                 'observation_space': json.dumps(OBSERVATION_SPACE),
-                 'model_config': json.dumps(dqn_config)
-                 }
-
-    msg = requests.post(START_TRAINER_URL, data=start_msg)
-
-    if msg.status_code != 200:
-        print("{} : Trainer Creation failed with ERR={}".
-              format(datetime.now(), msg.status_code))
-        raise SystemExit
-
-    msg = msg.json()
-
-    if not msg['status']:
-        print("{} : Trainer Creation failed with ERR={}".
-              format(datetime.now(), msg['error']))
-        raise SystemExit
-
-    trainer_id = msg['id']
-    trainer_address = msg['address']
-    print("{} : Trainer Created with ID={}, and ADDRESS={}".
-          format(datetime.now(), trainer_id, trainer_address))
-
-    world = MKTWorld(env_config)
-    drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
-
-    for i in range(20):  # 20
-        count = 0
-        total = 0
-        for _ in range(500):  # 500
-            eid = drl_trainer.start_episode(training_enabled=True)
-            obs = world.reset()
-            done = False
-            reward = 0
-            while not done:
-                action = drl_trainer.get_action(eid, obs)
-                obs, reward, done, info = world.step(action)
-                drl_trainer.log_returns(eid, reward, info=info)
-            drl_trainer.end_episode(eid, obs)
-            count += 1
-            total += reward
-        print("{} : Iteration {} - Mean Reward = {}"
-              .format(datetime.now(), i, total / count))
-
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
+    for model in ['DQN', 'SimpleQ']:
 
-    stop_msg = {'id': trainer_id}
-    stop_result = requests.post(STOP_TRAINER_URL, data=stop_msg).json()
+        start_msg = {'action_space': json.dumps(ACTION_SPACE),
+                     'observation_space': json.dumps(OBSERVATION_SPACE),
+                     'model_type': model,
+                     'model_config': json.dumps(dqn_config)
+                     }
 
-    print("{} : Stop Trainer ID={} message received {}"
-          .format(datetime.now(), trainer_id, stop_result))
+        msg = requests.post(START_TRAINER_URL, data=start_msg)
+
+        if msg.status_code != 200:
+            print("{} : Trainer Creation failed with ERR={}".
+                  format(datetime.now(), msg.status_code))
+            raise SystemExit
+
+        msg = msg.json()
+
+        if not msg['status']:
+            print("{} : Trainer Creation failed with ERR={}".
+                  format(datetime.now(), msg['error']))
+            raise SystemExit
+
+        trainer_id = msg['id']
+        trainer_address = msg['address']
+        print("{} : Trainer Created with ID={}, and ADDRESS={}".
+              format(datetime.now(), trainer_id, trainer_address))
+
+        world = MKTWorld(env_config)
+        drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
+
+        for i in range(20):  # 20
+            count = 0
+            total = 0
+            for _ in range(500):  # 500
+                eid = drl_trainer.start_episode(training_enabled=True)
+                obs = world.reset()
+                done = False
+                reward = 0
+                while not done:
+                    action = drl_trainer.get_action(eid, obs)
+                    obs, reward, done, info = world.step(action)
+                    drl_trainer.log_returns(eid, reward, info=info)
+                drl_trainer.end_episode(eid, obs)
+                count += 1
+                total += reward
+            print("{} : Iteration {} - Mean Reward = {}"
+                  .format(datetime.now(), i, total / count))
+
+
+        print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
+
+        stop_msg = {'id': trainer_id}
+        stop_result = requests.post(STOP_TRAINER_URL, data=stop_msg).json()
+
+        print("{} : Stop Trainer ID={} message received {}"
+              .format(datetime.now(), trainer_id, stop_result))

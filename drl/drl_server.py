@@ -7,7 +7,13 @@ from multiprocessing import Process, ProcessError, Queue
 import gym
 from gym.spaces import Space, Discrete, Tuple
 
-from ray.rllib.agents.dqn import DQNTrainer
+from ray.rllib.agents.dqn import DQNTrainer, ApexTrainer, SimpleQTrainer
+from ray.rllib.agents.ppo import PPOTrainer, APPOTrainer
+from ray.rllib.agents.impala import ImpalaTrainer
+from ray.rllib.agents.a3c import A3CTrainer
+from ray.rllib.agents.sac import SACTrainer
+from ray.rllib.agents.ddpg import DDPGTrainer
+
 from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.tune.registry import register_env
 import ray
@@ -24,12 +30,16 @@ class MKTWorld(gym.Env):
         self.action_space = action_space
         self.observation_space = observation_space
 
+trainers = {'DQN': DQNTrainer, 'PPO':PPOTrainer, 'APPO':APPOTrainer, 'Apex': ApexTrainer, 'SimpleQ':SimpleQTrainer,
+            'Impala': ImpalaTrainer, 'SAC':SACTrainer, 'A3C': A3CTrainer, 'DDPG': DDPGTrainer}
+
 def drl_trainer(
         log_file: str,
         input_port: int,
         action_space: Space,
         observation_space: Space,
-        dqn_config: dict,
+        model_type: str,
+        drl_config: dict,
         q: Queue):
     # Replace file descriptors for stdin, stdout, and stderr
     stdin = '/dev/null'
@@ -48,14 +58,14 @@ def drl_trainer(
 
         register_env("srv", lambda _: MKTWorld(action_space, observation_space))
 
-        dqn_config.update(
+        drl_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
              "num_workers": 0,
              "input_evaluation": []})
 
-        dqn = DQNTrainer(
+        dqn = trainers[model_type](
             env="srv",
-            config=dqn_config
+            config=drl_config
         )
         print("{} : [INFO] DRL Trainer Configured at {}:{}"
               .format(datetime.now(), SERVER_ADDRESS, input_port))
@@ -121,6 +131,7 @@ class DRLServer:
             PORT + self.trainer_id,
             action_space,
             observation_space,
+            payload['model_type'],
             payload['model_config'],
             self.queue
         )

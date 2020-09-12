@@ -11,8 +11,9 @@ from gym.spaces import Discrete, Tuple, Box, Dict, flatten
 
 from ray.rllib.agents.dqn import DQNTrainer, ApexTrainer, SimpleQTrainer
 from ray.rllib.agents.ppo import PPOTrainer, APPOTrainer
-from ray.rllib.agents.a3c import A3CTrainer
 from ray.rllib.agents.impala import ImpalaTrainer
+
+
 from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.tune.registry import register_env
 import ray
@@ -92,8 +93,6 @@ model_config = {
     },
     'APPO' : {
     },
-    'A3C' : {
-    },
     'Impala' : {
     },
     'Apex': {
@@ -106,7 +105,7 @@ model_config = {
 }
 
 trainers = {'DQN': DQNTrainer, 'PPO':PPOTrainer, 'APPO':APPOTrainer, 'Apex': ApexTrainer, 'SimpleQ':SimpleQTrainer,
-            'A3C': A3CTrainer, 'Impala': ImpalaTrainer}
+            'Impala': ImpalaTrainer}
 
 def drl_trainer(
         log_file: str,
@@ -144,7 +143,8 @@ def drl_trainer(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
              "model": {"custom_model": "ParametricActionsModel"},
              "num_workers": 0,
-             })
+             "input_evaluation": []
+        })
 
 
         drl = trainers[model_type](
