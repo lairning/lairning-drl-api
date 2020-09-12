@@ -9,8 +9,8 @@ from multiprocessing import Process, ProcessError, Queue
 import gym
 from gym.spaces import Discrete, Tuple, Box, Dict, flatten
 
-from ray.rllib.agents.dqn import DQNTrainer
-from ray.rllib.agents.ppo import PPOTrainer
+from ray.rllib.agents.dqn import DQNTrainer, ApexTrainer, SimpleQTrainer
+from ray.rllib.agents.ppo import PPOTrainer, APPOTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.tune.registry import register_env
 import ray
@@ -81,16 +81,25 @@ class ParametricActionsModel(DistributionalQTFModel):
         return self.action_param_model.value_function()
 
 model_config = {
-    'dqn' : {
+    'DQN' : {
         "input_evaluation": [],
         "hiddens": [],
         "dueling": False
      },
-    'ppo' : {
+    'PPO' : {
+    },
+    'APPO' : {
+    },
+    'Apex': {
+        "input_evaluation": [],
+        "hiddens"         : [],
+        "dueling"         : False
+    },
+    'SimpleQ': {
     }
 }
 
-trainers = {'dqn': DQNTrainer, 'ppo':PPOTrainer}
+trainers = {'DQN': DQNTrainer, 'PPO':PPOTrainer, 'APPO':APPOTrainer, 'Apex': ApexTrainer, 'SimpleQ':SimpleQTrainer}
 
 def drl_trainer(
         log_file: str,

@@ -197,14 +197,24 @@ dqn_config = {
 '''
 
 model_config = {
-    'dqn': {
+    'DQN': {
         "v_min": -5,
         "v_max": 135.0,
-        'lr'                     : 5e-5,
         "learning_starts"        : 100,
-        "timesteps_per_iteration": 500
     },
-    'ppo' : {}
+    'PPO' : {},
+    'APPO': {},
+    'Apex': {
+        "v_min"                  : -5,
+        "v_max"                  : 135.0,
+        "learning_starts"        : 100,
+    },
+    'SimpleQ': {
+        "exploration_config": {
+            "epsilon_timesteps": 2000
+        },
+        "learning_starts": 100,
+    }
 }
 
 # Commands for remote inference mode.
@@ -281,7 +291,7 @@ if __name__ == "__main__":
 
     # Run DQN and PPO Models
 
-    for model in ['ppo','dqn']:
+    for model in ['APPO','Apex', 'SimpleQ']:
 
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,
