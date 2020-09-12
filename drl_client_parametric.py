@@ -291,7 +291,7 @@ if __name__ == "__main__":
 
     # Run DQN and PPO Models
 
-    for model in ['SimpleQ']:
+    for model in ['DQN']:
 
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,
