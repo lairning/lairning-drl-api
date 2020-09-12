@@ -10,6 +10,7 @@ import gym
 from gym.spaces import Discrete, Tuple, Box, Dict, flatten
 
 from ray.rllib.agents.dqn import DQNTrainer
+from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.tune.registry import register_env
 import ray
@@ -79,12 +80,26 @@ class ParametricActionsModel(DistributionalQTFModel):
     def value_function(self):
         return self.action_param_model.value_function()
 
+model_config = {
+    'dqn' : {
+        "num_workers": 0,
+        "input_evaluation": [],
+        "hiddens": [],
+        "dueling": False
+     },
+    'ppo' : {
+    }
+}
+
+trainers = {'dqn': DQNTrainer, 'ppo':PPOTrainer}
+
 def drl_trainer(
         log_file: str,
         input_port: int,
         action_space: Discrete,
         observation_space: Box,
-        dqn_config: dict,
+        model_type: str,
+        drl_config: dict,
         q: Queue):
     # Replace file descriptors for stdin, stdout, and stderr
     stdin = '/dev/null'
@@ -105,18 +120,16 @@ def drl_trainer(
 
         ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
 
-        dqn_config.update(
+        drl_config.update(model_config[model_type])
+        drl_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
-             "model": {"custom_model": "ParametricActionsModel"},
-             "num_workers": 0,
-             "input_evaluation": [],
-             "hiddens": [],
-             "dueling": False
+             "model": {"custom_model": "ParametricActionsModel"}
              })
 
-        dqn = DQNTrainer(
+
+        drl = trainers[model_type](
             env="env",
-            config=dqn_config
+            config=drl_config
         )
         print("{} : [INFO] DRL Trainer Configured at {}:{}"
               .format(datetime.now(), SERVER_ADDRESS, input_port))
@@ -141,8 +154,8 @@ def drl_trainer(
     # Serving and training loop
     i = 1
     while True:
-        dqn.train()
-        checkpoint_path = dqn.save()
+        drl.train()
+        checkpoint_path = drl.save()
         try:
             with open(checkpoint_file, "w") as f:
                 f.write(checkpoint_path)
@@ -174,6 +187,7 @@ class DRLServer:
             PORT + self.trainer_id,
             action_space,
             observation_space,
+            payload['model_type'],
             payload['model_config'],
             self.queue
         )
