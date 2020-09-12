@@ -136,10 +136,10 @@ model_config = {
     'Impala': {},
     'SAC' : {
         "Q_model": {
-            "fcnet_hiddens"     : [128],
+            "fcnet_hiddens"     : [64,64],
         },
         "policy_model": {
-            "fcnet_hiddens"     : [128],
+            "fcnet_hiddens"     : [64,64],
         },
     },
     'SimpleQ': {
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    for model in ['SimpleQ','DQN']:
+    for model in ['SAC','DQN','PPO']:
 
         start_msg = {'action_space': json.dumps(ACTION_SPACE),
                      'observation_space': json.dumps(OBSERVATION_SPACE),
