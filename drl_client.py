@@ -30,8 +30,7 @@ CUSTOMER_ATTRIBUTES = {'age': ['<25', '25-45', '>45'],
                        'region': ['Lisbon', 'Oporto', 'North', 'Center', 'South']}
 
 
-# ACTION_SPACE = Discrete(4)
-# OBSERVATION_SPACE = Tuple((Discrete(7), Discrete(3), Discrete(2), Discrete(6)))
+CONTEXT_ATTRIBUTES = {}
 
 class Space:
     def discrete(n: int):
