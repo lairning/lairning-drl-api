@@ -112,7 +112,7 @@ model_config = {
         "v_max": 135.0,
         "hiddens": [128],
         "exploration_config": {
-            "epsilon_timesteps": 4000,
+            "epsilon_timesteps": 5000,
         },
         'lr': 5e-5,
         "num_atoms": 2,
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         world = MKTWorld(env_config)
         drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
 
-        for i in range(40):  # 20
+        for i in range(30):  # 20
             count = 0
             total = 0
             for _ in range(500):  # 500
