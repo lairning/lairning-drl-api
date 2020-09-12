@@ -242,11 +242,22 @@ class DRLTrainer:
         })["episode_id"]
 
     def get_action(self, episode_id: str, observation: object):
+
+        msg = self._send({
+            "command": GET_ACTION,
+            "observation": observation,
+            "episode_id": episode_id,
+        })
+        print(msg)
+        '''
         return self._send({
             "command": GET_ACTION,
             "observation": observation,
             "episode_id": episode_id,
         })["action"]
+        '''
+        return msg["action"]
+
 
     def log_action(self, episode_id: str, observation: object, action: object):
         self._send({
