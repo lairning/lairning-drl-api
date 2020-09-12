@@ -57,9 +57,9 @@ def flatten_space(space):
     raise NotImplementedError
 
 MKT_TEMPLATES = {'eMail':['mail1','mail2','mail3','mail4'],
-                 'webDiscount':['discount1','discount2','discount3'],
-                 'webPremium':['premium1','premium2','premium3','premium4','premium5'],
-                'callCenter':['script1','script2','script3','script4','script5','script6']}
+                 'webDiscount':['discount1','discount2','discount3','discount4'],
+                 'webPremium':['premium1','premium2','premium3','premium4'],
+                'callCenter':['script1','script2','script3','script4']}
 
 MKT_REWARDS = { 'email do nothing':-0.5,
                 'call do nothing':-5,
@@ -196,14 +196,15 @@ dqn_config = {
 }
 '''
 
-# "num_atoms"  Cannot be set with parametric
-dqn_config = {
-    "v_min": -5,
-    "v_max": 135.0,
-    "hiddens": [128],
-    'lr'                     : 5e-5,
-    "learning_starts"        : 100,
-    "timesteps_per_iteration": 500
+model_config = {
+    'dqn': {
+        "v_min": -5,
+        "v_max": 135.0,
+        'lr'                     : 5e-5,
+        "learning_starts"        : 100,
+        "timesteps_per_iteration": 500
+    },
+    'ppo' : {}
 }
 
 # Commands for remote inference mode.
@@ -284,7 +285,7 @@ if __name__ == "__main__":
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,
                      'model_type': model,
-                     'model_config': json.dumps(dqn_config)
+                     'model_config': json.dumps(model_config[model])
                      }
 
         msg = requests.post(START_TRAINER_URL, data=start_msg)
