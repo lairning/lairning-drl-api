@@ -291,7 +291,7 @@ if __name__ == "__main__":
 
     # Run DQN and PPO Models
 
-    for model in ['ppo']:
+    for model in ['dqn']:
 
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,
@@ -321,10 +321,10 @@ if __name__ == "__main__":
         world = MKTWorld(env_config)
         drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
 
-        for i in range(20):  # 20
+        for i in range(1):  # 20
             count = 0
             total = 0
-            for _ in range(500):  # 500
+            for _ in range(20):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
                 done = False
