@@ -131,7 +131,7 @@ model_config = {
         "learning_starts": 100,
         "timesteps_per_iteration": 500
     },
-    'PPO' : {"vf_clip_param": 100.0},
+    'PPO' : {"vf_clip_param": 140.0},
     'APPO' : {},
     'Impala': {},
     'SAC' : {
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    for model in ['SAC','DQN','PPO']:
+    for model in ['SimpleQ','DQN']:
 
         start_msg = {'action_space': json.dumps(ACTION_SPACE),
                      'observation_space': json.dumps(OBSERVATION_SPACE),
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         world = MKTWorld(env_config)
         drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
 
-        for i in range(20):  # 20
+        for i in range(40):  # 20
             count = 0
             total = 0
             for _ in range(500):  # 500
