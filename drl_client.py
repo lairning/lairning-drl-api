@@ -131,7 +131,7 @@ model_config = {
         "learning_starts": 100,
         "timesteps_per_iteration": 500
     },
-    'PPO' : {},
+    'PPO' : {"vf_clip_param": 100.0},
     'APPO' : {},
     'Impala': {},
     'SAC' : {
