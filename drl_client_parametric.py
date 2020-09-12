@@ -242,21 +242,11 @@ class DRLTrainer:
         })["episode_id"]
 
     def get_action(self, episode_id: str, observation: object):
-
-        msg = self._send({
-            "command": GET_ACTION,
-            "observation": observation,
-            "episode_id": episode_id,
-        })
-        print(msg)
-        '''
         return self._send({
             "command": GET_ACTION,
             "observation": observation,
             "episode_id": episode_id,
         })["action"]
-        '''
-        return msg["action"]
 
 
     def log_action(self, episode_id: str, observation: object, action: object):
@@ -291,7 +281,7 @@ if __name__ == "__main__":
 
     # Run DQN and PPO Models
 
-    for model in ['dqn']:
+    for model in ['ppo','dqn']:
 
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,
