@@ -204,6 +204,8 @@ model_config = {
     },
     'PPO' : {},
     'APPO': {},
+    'A3C': {},
+    'Impala': {},
     'Apex': {
         "v_min"                  : -5,
         "v_max"                  : 135.0,
@@ -291,7 +293,7 @@ if __name__ == "__main__":
 
     # Run DQN and PPO Models
 
-    for model in ['SimpleQ', 'Apex', 'APPO']:
+    for model in ['A3C', 'Impala']:
 
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,

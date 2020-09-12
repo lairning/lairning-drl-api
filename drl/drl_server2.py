@@ -11,6 +11,8 @@ from gym.spaces import Discrete, Tuple, Box, Dict, flatten
 
 from ray.rllib.agents.dqn import DQNTrainer, ApexTrainer, SimpleQTrainer
 from ray.rllib.agents.ppo import PPOTrainer, APPOTrainer
+from ray.rllib.agents.a3c import A3CTrainer
+from ray.rllib.agents.impala import ImpalaTrainer
 from ray.rllib.env.policy_server_input import PolicyServerInput
 from ray.tune.registry import register_env
 import ray
@@ -90,6 +92,10 @@ model_config = {
     },
     'APPO' : {
     },
+    'A3C' : {
+    },
+    'Impala' : {
+    },
     'Apex': {
         "input_evaluation": [],
         "hiddens"         : [],
@@ -99,7 +105,8 @@ model_config = {
     }
 }
 
-trainers = {'DQN': DQNTrainer, 'PPO':PPOTrainer, 'APPO':APPOTrainer, 'Apex': ApexTrainer, 'SimpleQ':SimpleQTrainer}
+trainers = {'DQN': DQNTrainer, 'PPO':PPOTrainer, 'APPO':APPOTrainer, 'Apex': ApexTrainer, 'SimpleQ':SimpleQTrainer,
+            'A3C': A3CTrainer, 'Impala': ImpalaTrainer}
 
 def drl_trainer(
         log_file: str,
@@ -128,7 +135,9 @@ def drl_trainer(
 
         ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
 
-        assert model_type in model_config.keys(), "Model Type {} not in {}".format(model_type, model_config.keys())
+        assert model_type in model_config.keys(), "Model Type {} not in Configs {}".format(model_type,
+                                                                                         model_config.keys())
+        assert model_type in trainers.keys(), "Model Type {} not in Trainers {}".format(model_type, trainers.keys())
 
         drl_config.update(model_config[model_type])
         drl_config.update(
