@@ -7,24 +7,27 @@ import requests
 import pickle
 import json
 
-MKT_TEMPLATES = {'eMail': ['mail1', 'mail2', 'mail3', 'mail4'],
-                 'webDiscount': ['discount1', 'discount2', 'discount3', 'discount4'],
-                 'webInfo': ['info1', 'info2', 'info3', 'info4'],
-                 'webPremium': ['premium1', 'premium2', 'premium3', 'premium4']}
+MKT_TEMPLATES = {'eMail':['mail1','mail2','mail3','mail4'],
+                 'webDiscount':['discount1','discount2','discount3','discount4'],
+                 'webPremium':['premium1','premium2','premium3','premium4'],
+                'callCenter':['script1','script2','script3','script4']}
+
+MKT_REWARDS = { 'email do nothing':-0.5,
+                'call do nothing':-5,
+                'call discount purchase':75,
+                'call premium purchase':130,
+                'web discount purchase':80,
+                'web premium purchase':135}
+
+CUSTOMER_BEHAVIOR = {'eMail':['email do nothing', 'callCenter', 'webDiscount','webPremium'],
+                     'webDiscount':['email do nothing','webPremium','web discount purchase'],
+                     'webPremium':['email do nothing','webDiscount','web premium purchase','callCenter'],
+                     'callCenter':['call do nothing','call discount purchase','call premium purchase']
+                     }
 
 CUSTOMER_ATTRIBUTES = {'age': ['<25', '25-45', '>45'],
                        'sex': ['Men', 'Women'],
                        'region': ['Lisbon', 'Oporto', 'North', 'Center', 'South']}
-
-MKT_REWARDS = {'do_nothing': -1,
-               'discount_purchase': 2,
-               'premium_purchase': 5}
-
-CUSTOMER_BEHAVIOR = {'eMail': ['do_nothing', 'webDiscount', 'webInfo'],
-                     'webDiscount': ['do_nothing', 'webInfo', 'discount_purchase'],
-                     'webInfo': ['do_nothing', 'webDiscount', 'webPremium'],
-                     'webPremium': ['do_nothing', 'webDiscount', 'premium_purchase']
-                     }
 
 
 # ACTION_SPACE = Discrete(4)
@@ -100,8 +103,8 @@ env_config = {
 }
 
 dqn_config = {
-    "v_min": -1.0,
-    "v_max": 5.0,
+    "v_min": -5.0,
+    "v_max": 135.0,
     "hiddens": [128],
     "exploration_config": {
         "epsilon_timesteps": 4000,
