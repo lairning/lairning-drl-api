@@ -128,6 +128,8 @@ def drl_trainer(
 
         ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
 
+        assert model_type in model_config.keys(), "Model Type {} not in {}".format(model_type, model_config.keys())
+
         drl_config.update(model_config[model_type])
         drl_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
