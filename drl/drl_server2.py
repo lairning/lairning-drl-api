@@ -82,7 +82,6 @@ class ParametricActionsModel(DistributionalQTFModel):
 
 model_config = {
     'dqn' : {
-        "num_workers": 0,
         "input_evaluation": [],
         "hiddens": [],
         "dueling": False
@@ -123,7 +122,8 @@ def drl_trainer(
         drl_config.update(model_config[model_type])
         drl_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
-             "model": {"custom_model": "ParametricActionsModel"}
+             "model": {"custom_model": "ParametricActionsModel"},
+             "num_workers": 0,
              })
 
 
