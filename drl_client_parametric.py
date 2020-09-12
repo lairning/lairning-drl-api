@@ -275,59 +275,62 @@ class DRLTrainer:
 if __name__ == "__main__":
 
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
-
-    start_msg = {'action_space_size': max_action_size,
-                 'observation_space_size': flat_observation_space_size,
-                 'model_type': 'dqn',
-                 'model_config': json.dumps(dqn_config)
-                 }
-
-    msg = requests.post(START_TRAINER_URL, data=start_msg)
-
-    if msg.status_code != 200:
-        print("{} : Trainer Creation failed with ERR={}".
-              format(datetime.now(), msg.status_code))
-        raise SystemExit
-
-    msg = msg.json()
-
-    if not msg['status']:
-        print("{} : Trainer Creation failed with ERR={}".
-              format(datetime.now(), msg['error']))
-        raise SystemExit
-
-    trainer_id = msg['id']
-    trainer_address = msg['address']
-    print("{} : Trainer Created with ID={}, and ADDRESS={}".
-          format(datetime.now(), trainer_id, trainer_address))
-
-    world = MKTWorld(env_config)
-    drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
-
-    for i in range(20):  # 20
-        count = 0
-        total = 0
-        for _ in range(500):  # 500
-            eid = drl_trainer.start_episode(training_enabled=True)
-            obs = world.reset()
-            done = False
-            reward = 0
-            while not done:
-                action = drl_trainer.get_action(eid, obs)
-                obs, reward, done, info = world.step(action)
-                drl_trainer.log_returns(eid, reward, info=info)
-            drl_trainer.end_episode(eid, obs)
-            count += 1
-            total += reward
-        print("{} : Iteration {} - Mean Reward = {}"
-              .format(datetime.now(), i, total / count))
-
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
+    # Run DQN and PPO Models
 
-    stop_msg = {'id': trainer_id}
-    stop_result = requests.post(STOP_TRAINER_URL, data=stop_msg).json()
+    for model in ['ppo']: # ['dqn', 'ppo']:
 
-    print("{} : Stop Trainer ID={} message received {}"
-          .format(datetime.now(), trainer_id, stop_result))
+        start_msg = {'action_space_size': max_action_size,
+                     'observation_space_size': flat_observation_space_size,
+                     'model_type': model,
+                     'model_config': json.dumps(dqn_config)
+                     }
+
+        msg = requests.post(START_TRAINER_URL, data=start_msg)
+
+        if msg.status_code != 200:
+            print("{} : Trainer Creation failed with ERR={}".
+                  format(datetime.now(), msg.status_code))
+            raise SystemExit
+
+        msg = msg.json()
+
+        if not msg['status']:
+            print("{} : Trainer Creation failed with ERR={}".
+                  format(datetime.now(), msg['error']))
+            raise SystemExit
+
+        trainer_id = msg['id']
+        trainer_address = msg['address']
+        print("{} : {} Trainer Created with ID={}, and ADDRESS={}".
+              format(datetime.now(), model, trainer_id, trainer_address))
+
+        world = MKTWorld(env_config)
+        drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
+
+        for i in range(20):  # 20
+            count = 0
+            total = 0
+            for _ in range(500):  # 500
+                eid = drl_trainer.start_episode(training_enabled=True)
+                obs = world.reset()
+                done = False
+                reward = 0
+                while not done:
+                    action = drl_trainer.get_action(eid, obs)
+                    obs, reward, done, info = world.step(action)
+                    drl_trainer.log_returns(eid, reward, info=info)
+                drl_trainer.end_episode(eid, obs)
+                count += 1
+                total += reward
+            print("{} : Model {} Iteration {} - Mean Reward = {}"
+                  .format(datetime.now(), model, i, total / count))
+
+        print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
+
+        stop_msg = {'id': trainer_id}
+        stop_result = requests.post(STOP_TRAINER_URL, data=stop_msg).json()
+
+        print("{} : Stop Trainer ID={} message received {}"
+              .format(datetime.now(), trainer_id, stop_result))
