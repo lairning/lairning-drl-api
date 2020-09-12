@@ -293,7 +293,7 @@ if __name__ == "__main__":
 
     # Run DQN and PPO Models
 
-    for model in ['A3C', 'Impala']:
+    for model in ['Impala']:
 
         start_msg = {'action_space_size': max_action_size,
                      'observation_space_size': flat_observation_space_size,
