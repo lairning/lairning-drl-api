@@ -42,8 +42,13 @@ class Space:
 
 
 ACTION_SPACE = Space.discrete(4)
-OBSERVATION_SPACE = Space.tuple((Space.discrete(7), Space.discrete(3), Space.discrete(2), Space.discrete(5)))
+#OBSERVATION_SPACE = Space.tuple((Space.discrete(7), Space.discrete(3), Space.discrete(2), Space.discrete(5)))
 
+real_obs_tuple = (Space.discrete(len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys())),)
+real_obs_tuple += tuple((Space.discrete(len(l)) for l in CUSTOMER_ATTRIBUTES.values()))
+real_obs_tuple += tuple((Space.discrete(len(l)) for l in CONTEXT_ATTRIBUTES.values()))
+
+OBSERVATION_SPACE = Space.tuple(real_obs_tuple)
 
 class MKTWorld:
 
