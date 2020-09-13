@@ -212,7 +212,7 @@ model_config = {
     },
     'SimpleQ': {
         "exploration_config": {
-            "epsilon_timesteps": 2000
+            "epsilon_timesteps": 5000
         },
         "learning_starts": 100,
     }
