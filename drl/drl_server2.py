@@ -221,6 +221,9 @@ class DRLServer:
                   .format(datetime.now(), err))
             return {'status': False, 'error': err}
 
+        print("{} : DEBUG DRLServer Payload {}"
+              .format(datetime.now(), payload))
+
         drl_trainer_args = (
             trainer_log_file,
             PORT + self.trainer_id,
