@@ -7,7 +7,7 @@ from datetime import datetime
 from multiprocessing import Process, ProcessError, Queue
 
 import gym
-from gym.spaces import Discrete, Tuple, Box, Dict, flatten
+from gym.spaces import Discrete, Tuple, Box, Dict, Space
 
 from ray.rllib.agents.dqn import DQNTrainer, ApexTrainer, SimpleQTrainer
 from ray.rllib.agents.ppo import PPOTrainer, APPOTrainer
@@ -28,6 +28,11 @@ PORT = 5010
 AUTHKEY = b'moontedrl!'
 
 tf1, tf, tfv = try_import_tf()
+
+class MKTWorld(gym.Env):
+    def __init__(self, action_space: Discrete, observation_space: Tuple):
+        self.action_space = action_space
+        self.observation_space = observation_space
 
 class ParametricMKTWorld(gym.Env):
     def __init__(self, action_space: Discrete, observation_space: Box):
@@ -111,7 +116,7 @@ def drl_trainer(
         log_file: str,
         input_port: int,
         action_space: Discrete,
-        observation_space: Box,
+        observation_space: Space,
         model_type: str,
         model_parametric: bool,
         drl_config: dict,
@@ -137,19 +142,20 @@ def drl_trainer(
 
         ray.init()
 
-        register_env("env", lambda _: ParametricMKTWorld(action_space, observation_space))
-
         drl_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
              "num_workers": 0,
              "input_evaluation": []})
 
         if model_parametric:
+            register_env("env", lambda _: ParametricMKTWorld(action_space, observation_space))
             ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
             drl_config.update(parametric_model_config[model_type])
             drl_config.update(
                 {"model": {"custom_model": "ParametricActionsModel"}
             })
+        else:
+            register_env("srv", lambda _: MKTWorld(action_space, observation_space))
 
         drl = trainers[model_type](
             env="env",
