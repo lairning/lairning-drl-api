@@ -83,10 +83,10 @@ class MKTWorld:
     def reset(self):
         segments = self.random_customer_context()
         self.segment = tuple(segments.values())
-        features = list(self.features)
+        #features = list(self.features)
         self.observation[0] = 0
-        for i, _ in enumerate(self.values):
-            self.observation[i + 1] = self.values[i].index(segments[features[i]])
+        for i, _ in enumerate(self.features):
+            self.observation[i + 1] = self.values[i].index(segments[self.features[i]])
         return self.observation
 
     def step(self, action: int):
@@ -157,7 +157,6 @@ class MKTWorldParametric(MKTWorld):
         self.max_action_size = max([len(options) for options in self.mkt_offers])
         self.action_mask = {tp_id: _get_action_mask(self.mkt_offers[tp], max_action_size) for tp_id, tp
                             in enumerate(self.mkt_offers.keys())}
-        print("Action Mask ", self.action_mask)
         real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
         real_obs_tuple += tuple((Discrete(len(l)) for l in self.values))
         self.flat = FlattenObservation(MKTEnv(real_observation_space=Tuple(real_obs_tuple),
@@ -168,9 +167,9 @@ class MKTWorldParametric(MKTWorld):
         return {'action_mask': self.action_mask[0], 'state': self.flat.observation(observation)}
 
     def step(self, action: int):
-        observation, reward, done, _ = super().step(action)
+        observation, reward, done, info = super().step(action)
         return {'action_mask': self.action_mask[self.observation[0]] if not done else [1] * self.max_action_size,
-                'state'      : self.flat.observation(observation)}, reward, done, {}
+                'state'      : self.flat.observation(observation)}, reward, done, info
 
 
 env_config = {
@@ -379,7 +378,6 @@ if __name__ == "__main__":
             for _ in range(1000):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
-                print(" OBS = ", obs)
                 done = False
                 reward = 0
                 while not done:
