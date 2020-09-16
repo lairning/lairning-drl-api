@@ -208,7 +208,7 @@ class DRLServer:
             action_space = myspace2gymspace(payload['action_space'])
             observation_space = myspace2gymspace(payload['observation_space'])
         except Exception as err:
-            print("{} : [ERROR CREATING GYM SPACES] {}}"
+            print("{} : [ERROR CREATING GYM SPACES] {}"
                   .format(datetime.now(), err))
             return {'status': False, 'error': err}
 

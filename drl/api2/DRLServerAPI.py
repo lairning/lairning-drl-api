@@ -28,8 +28,8 @@ class DRLServerStart(Resource):
         try:
             args = self.args.parse_args()
             payload = {
-                "action_space": args.action_space,
-                "observation_space": args.observation_space,
+                "action_space": json.loads(args.action_space),
+                "observation_space": json.loads(args.observation_space),
                 "model_type": args.model_type,
                 "model_parametric": args.model_parametric,
                 "model_config": json.loads(args.model_config)
