@@ -310,7 +310,7 @@ if __name__ == "__main__":
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    for mkt_template in [MKT_TEMPLATES1, MKT_TEMPLATES2]:
+    for mkt_template in [MKT_TEMPLATES2]:
 
         model_config = base_config.copy()
 
