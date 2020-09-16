@@ -157,7 +157,7 @@ class MKTWorldParametric(MKTWorld):
         self.max_action_size = max([len(options) for options in self.mkt_offers])
         self.action_mask = {tp_id: _get_action_mask(self.mkt_offers[tp], max_action_size) for tp_id, tp
                             in enumerate(self.mkt_offers.keys())}
-        print("Journeys ", self.journeys)
+        print("Action Mask ", self.action_mask)
         real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
         real_obs_tuple += tuple((Discrete(len(l)) for l in self.values))
         self.flat = FlattenObservation(MKTEnv(real_observation_space=Tuple(real_obs_tuple),
