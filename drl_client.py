@@ -47,7 +47,7 @@ class Space:
         return {'type': 'Tuple', 'value': t}
 
     def box(low: int, high: int, size: int):
-        return {'type': 'Tuple', 'low': low, 'high': high, 'size': size}
+        return {'type': 'Box', 'low': low, 'high': high, 'size': size}
 
 
 class MKTWorld:
