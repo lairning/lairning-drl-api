@@ -83,7 +83,6 @@ class MKTWorld:
     def reset(self):
         segments = self.random_customer_context()
         self.segment = tuple(segments.values())
-        #features = list(self.features)
         self.observation[0] = 0
         for i, _ in enumerate(self.features):
             self.observation[i + 1] = self.values[i].index(segments[self.features[i]])
@@ -168,7 +167,7 @@ class MKTWorldParametric(MKTWorld):
 
     def step(self, action: int):
         observation, reward, done, info = super().step(action)
-        return {'action_mask': self.action_mask[self.observation[0]] if not done else [1] * self.max_action_size,
+        return {'action_mask': self.action_mask[observation[0]] if not done else [1] * self.max_action_size,
                 'state'      : self.flat.observation(observation)}, reward, done, info
 
 
