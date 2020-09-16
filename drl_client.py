@@ -155,8 +155,8 @@ class MKTWorldParametric(MKTWorld):
     def __init__(self, config):
         super(MKTWorldParametric, self).__init__(config)
         self.max_action_size = max([len(options) for options in self.mkt_offers])
-        self.action_mask = {tp_id: _get_action_mask(self.journeys[tp], max_action_size) for tp_id, tp
-                            in enumerate(self.journeys.keys())}
+        self.action_mask = {tp_id: _get_action_mask(self.mkt_offers[tp], max_action_size) for tp_id, tp
+                            in enumerate(self.mkt_offers.keys())}
         print("Journeys ", self.journeys)
         real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
         real_obs_tuple += tuple((Discrete(len(l)) for l in self.values))
