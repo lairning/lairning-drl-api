@@ -137,8 +137,8 @@ def drl_trainer(
         assert model_type in parametric_model_config.keys(), "Model Type {} not in Configs {}".format(model_type,                                                                                                  parametric_model_config.keys())
         assert model_type in trainers.keys(), "Model Type {} not in Trainers {}".format(model_type, trainers.keys())
 
-        print("{} : [DEBUG] drl_trainer ActS={}, ObsS={}, MType={}, Parametric={}, Model Config={}"
-             .format(datetime.now(), action_space, observation_space, model_type, model_parametric, drl_config))
+        # print("{} : [DEBUG] drl_trainer ActS={}, ObsS={}, MType={}, Parametric={}, Model Config={}"
+        #      .format(datetime.now(), action_space, observation_space, model_type, model_parametric, drl_config))
 
         ray.init()
 

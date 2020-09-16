@@ -16,7 +16,7 @@ class DRLServerStart(Resource):
         self.args.add_argument("action_space")
         self.args.add_argument("observation_space")
         self.args.add_argument("model_type", type = str)
-        self.args.add_argument("model_parametric", type = bool)
+        self.args.add_argument("model_parametric", type = int)
         self.args.add_argument("model_config")
         # self.args.add_argument("action_space", type = dict)
         # self.args.add_argument("observation_space", type = dict)
