@@ -378,6 +378,7 @@ if __name__ == "__main__":
             for _ in range(1000):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
+                print(" OBS = ", obs)
                 done = False
                 reward = 0
                 while not done:
