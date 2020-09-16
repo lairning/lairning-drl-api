@@ -154,13 +154,13 @@ def _get_action_mask(actions: list, max_actions: int):
 class MKTWorldParametric(MKTWorld):
     def __init__(self, config):
         super(MKTWorldParametric, self).__init__(config)
-        max_action_size = max([len(options) for options in self.mkt_offers])
+        self.max_action_size = max([len(options) for options in self.mkt_offers])
         self.action_mask = {tp_id: _get_action_mask(self.journeys[tp], max_action_size) for tp_id, tp
                             in enumerate(self.journeys.keys())}
         real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
         real_obs_tuple += tuple((Discrete(len(l)) for l in self.values))
         self.flat = FlattenObservation(MKTEnv(real_observation_space=Tuple(real_obs_tuple),
-                                              max_action_size=max_action_size))
+                                              max_action_size=self.max_action_size))
 
     def reset(self):
         observation = super().reset()
@@ -168,7 +168,7 @@ class MKTWorldParametric(MKTWorld):
 
     def step(self, action: int):
         observation, reward, done, _ = super().step(action)
-        return {'action_mask': self.action_mask[self.observation[0]] if not done else [1] * max_action_size,
+        return {'action_mask': self.action_mask[self.observation[0]] if not done else [1] * self.max_action_size,
                 'state'      : self.flat.observation(observation)}, reward, done, {}
 
 
