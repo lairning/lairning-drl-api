@@ -1,36 +1,43 @@
 import numpy as np
 import itertools
 from datetime import datetime
+from gym.spaces import Discrete, Tuple, Dict, Box, flatten
+import gym
 
 import requests
 
 import pickle
 import json
 
-MKT_TEMPLATES = {'eMail':['mail1','mail2','mail3','mail4'],
-                 'webDiscount':['discount1','discount2','discount3','discount4'],
-                 'webPremium':['premium1','premium2','premium3','premium4'],
-                'callCenter':['script1','script2','script3','script4']}
+MKT_TEMPLATES1 = {'eMail'      : ['mail1', 'mail2', 'mail3', 'mail4'],
+                  'webDiscount': ['discount1', 'discount2', 'discount3', 'discount4'],
+                  'webPremium' : ['premium1', 'premium2', 'premium3', 'premium4'],
+                  'callCenter' : ['script1', 'script2', 'script3', 'script4']}
 
-MKT_REWARDS = { 'email do nothing':-0.5,
-                'call do nothing':-5,
-                'call discount purchase':75,
-                'call premium purchase':130,
-                'web discount purchase':80,
-                'web premium purchase':135}
+MKT_TEMPLATES2 = {'eMail'      : ['mail1', 'mail2', 'mail3', 'mail4'],
+                  'webDiscount': ['discount1', 'discount2', 'discount3'],
+                  'webPremium' : ['premium1', 'premium2', 'premium3', 'premium4', 'premium5'],
+                  'callCenter' : ['script1', 'script2', 'script3', 'script4']}
 
-CUSTOMER_BEHAVIOR = {'eMail':['email do nothing', 'callCenter', 'webDiscount','webPremium'],
-                     'webDiscount':['email do nothing','webPremium','web discount purchase'],
-                     'webPremium':['email do nothing','webDiscount','web premium purchase','callCenter'],
-                     'callCenter':['call do nothing','call discount purchase','call premium purchase']
+MKT_REWARDS = {'email do nothing'      : -0.5,
+               'call do nothing'       : -5,
+               'call discount purchase': 75,
+               'call premium purchase' : 130,
+               'web discount purchase' : 80,
+               'web premium purchase'  : 135}
+
+CUSTOMER_BEHAVIOR = {'eMail'      : ['email do nothing', 'callCenter', 'webDiscount', 'webPremium'],
+                     'webDiscount': ['email do nothing', 'webPremium', 'web discount purchase'],
+                     'webPremium' : ['email do nothing', 'webDiscount', 'web premium purchase', 'callCenter'],
+                     'callCenter' : ['call do nothing', 'call discount purchase', 'call premium purchase']
                      }
 
-CUSTOMER_ATTRIBUTES = {'age': ['<25', '25-45', '>45'],
-                       'sex': ['Men', 'Women'],
+CUSTOMER_ATTRIBUTES = {'age'   : ['<25', '25-45', '>45'],
+                       'sex'   : ['Men', 'Women'],
                        'region': ['Lisbon', 'Oporto', 'North', 'Center', 'South']}
 
-
 CONTEXT_ATTRIBUTES = {}
+
 
 class Space:
     def discrete(n: int):
@@ -39,59 +46,57 @@ class Space:
     def tuple(t: tuple):
         return {'type': 'Tuple', 'value': t}
 
+    def box(low: int, high: int, size: int):
+        return {'type': 'Tuple', 'low': low, 'high': high, 'size': size}
 
-ACTION_SPACE = Space.discrete(4)
-#OBSERVATION_SPACE = Space.tuple((Space.discrete(7), Space.discrete(3), Space.discrete(2), Space.discrete(5)))
-
-real_obs_tuple = (Space.discrete(len(MKT_TEMPLATES.keys()) + len(MKT_REWARDS.keys())),)
-real_obs_tuple += tuple((Space.discrete(len(l)) for l in CUSTOMER_ATTRIBUTES.values()))
-real_obs_tuple += tuple((Space.discrete(len(l)) for l in CONTEXT_ATTRIBUTES.values()))
-
-OBSERVATION_SPACE = Space.tuple(real_obs_tuple)
 
 class MKTWorld:
-
     def __init__(self, config):
         self.probab = dict()
         self.rewards = config["mkt_rewards"]
         self.journeys = config["customer_journeys"]
         self.touch_points = list(config["customer_journeys"].keys()) + list(config["mkt_rewards"].keys())
-        self.customer_features = config["customer_attributes"].keys()
-        self.customer_values = list(config["customer_attributes"].values())
-        self.customer_segments = list(itertools.product(*self.customer_values))
-        self.customer_segment = self.customer_segments[0]
+
+        #self.customer_features = config["customer_attributes"].keys()
+        #self.customer_values = list(config["customer_attributes"].values())
+        #self.customer_segments = list(itertools.product(*self.customer_values))
+        #self.customer_segment = self.customer_segments[0]
+
+        self.features = config["customer_attributes"].keys() + config["context_attributes"].keys()
+        self.values = list(config["customer_attributes"].values() + config["context_attributes"].values())
+        self.segments = list(itertools.product(*self.values))
+        self.segment = self.segments[0]
+
         self.mkt_offers = config["mkt_offers"]
-        self.observation = list(4 * [0])
-        for cs in self.customer_segments:
+        self.observation = list((len(self.features) + 1) * [0])
+        for cs in self.segments:
             dt = dict()
             for t in self.mkt_offers.keys():
                 dt[t] = {mo: np.random.dirichlet(np.ones(len(self.journeys[t])), size=1)[0] for mo in
                          self.mkt_offers[t]}
             self.probab[cs] = dt
-        # self.action_space = ACTION_SPACE
-        # self.observation_space = OBSERVATION_SPACE
 
-    def random_customer(self):
-        cs = self.customer_segments[np.random.randint(len(self.customer_segments))]
-        return dict(zip(self.customer_features, cs))
+    def random_customer_context(self):
+        segments = self.segments[np.random.randint(len(self.segments))]
+        return dict(zip(self.features, segments))
 
     def reset(self):
-        cs = self.random_customer()
-        self.customer_segment = tuple(cs.values())
-        customer_feature = list(self.customer_features)
+        segments = self.random_customer_context()
+        self.segment = tuple(segments.values())
+        features = list(self.features)
         self.observation[0] = 0
-        self.observation[1] = self.customer_values[0].index(cs[customer_feature[0]])
-        self.observation[2] = self.customer_values[1].index(cs[customer_feature[1]])
-        self.observation[3] = self.customer_values[2].index(cs[customer_feature[2]])
+        for i, _ in enumerate(self.values):
+            self.observation[i + 1] = self.values[i].index(segments[features[i]])
         return self.observation
 
-    def step(self, action):
-        assert action in [0, 1, 2, 3], action
+    def step(self, action: int):
         touch_point = self.touch_points[self.observation[0]]
+        assert action < len(self.mkt_offers[touch_point]), \
+            "Action={}, TP={}, OFFERS={}".format(action, touch_point, self.mkt_offers[touch_point])
         mkt_offer = self.mkt_offers[touch_point][action]
         new_touch_point = np.random.choice(
             self.journeys[touch_point],
-            p=self.probab[self.customer_segment][touch_point][mkt_offer]
+            p=self.probab[self.segment][touch_point][mkt_offer]
         )
         self.observation[0] = self.touch_points.index(new_touch_point)
         done = new_touch_point in self.rewards.keys()
@@ -99,57 +104,124 @@ class MKTWorld:
         return self.observation, reward, done, {}
 
 
+def flatten_space(space):
+    if isinstance(space, Box):
+        return Box(space.low.flatten(), space.high.flatten())
+    if isinstance(space, Discrete):
+        return Box(low=0, high=1, shape=(space.n,))
+    if isinstance(space, Tuple):
+        space = [flatten_space(s) for s in space.spaces]
+        return Box(
+            low=np.concatenate([s.low for s in space]),
+            high=np.concatenate([s.high for s in space]),
+        )
+    if isinstance(space, Dict):
+        space = [flatten_space(s) for s in space.spaces.values()]
+        return Box(
+            low=np.concatenate([s.low for s in space]),
+            high=np.concatenate([s.high for s in space]),
+        )
+    raise NotImplementedError
+
+
+class FlattenObservation(gym.ObservationWrapper):
+    r"""Observation wrapper that flattens the observation."""
+
+    def __init__(self, env):
+        super(FlattenObservation, self).__init__(env)
+        self.observation_space = flatten_space(env.observation_space['state'])
+
+    def observation(self, observation):
+        return flatten(self.env.observation_space['state'], observation)
+
+
+class MKTEnv(gym.Env):
+    def __init__(self, real_observation_space, max_action_size):
+        self.action_space = Discrete(max_action_size)
+        self.observation_space = Dict({
+            "state"      : real_observation_space,
+            "action_mask": Box(low=0, high=1, shape=(max_action_size,))
+        })
+
+
+def _get_action_mask(actions: list, max_actions: int):
+    action_mask = [0] * max_actions
+    action_len = len(actions)
+    action_mask[:action_len] = [1] * action_len
+    return action_mask
+
+
+class MKTWorldParametric(MKTWorld):
+    def __init__(self, config):
+        super(MKTWorldParametric, self).__init__(config)
+        max_action_size = max([len(options) for options in self.mkt_offers])
+        self.action_mask = {tp_id: _get_action_mask(self.journeys[tp], max_action_size) for tp_id, tp
+                            in enumerate(self.journeys.keys())}
+        real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
+        real_obs_tuple += tuple((Discrete(len(l)) for l in self.values))
+        self.flat = FlattenObservation(MKTEnv(real_observation_space=Tuple(real_obs_tuple),
+                                              max_action_size=max_action_size))
+
+    def reset(self):
+        observation = super().reset()
+        return {'action_mask': self.action_mask[0], 'state': self.flat.observation(observation)}
+
+    def step(self, action: int):
+        observation, reward, done, _ = super().step(action)
+        return {'action_mask': self.action_mask[self.observation[0]] if not done else [1] * max_action_size,
+                'state'      : self.flat.observation(observation)}, reward, done, {}
+
+
 env_config = {
-    "mkt_rewards": MKT_REWARDS,
-    "customer_journeys": CUSTOMER_BEHAVIOR,
+    "mkt_rewards"        : MKT_REWARDS,
+    "customer_journeys"  : CUSTOMER_BEHAVIOR,
     "customer_attributes": CUSTOMER_ATTRIBUTES,
-    "mkt_offers": MKT_TEMPLATES
+    "context_attributes" : CONTEXT_ATTRIBUTES,
 }
 
 model_config = {
-    'DQN': {
-        "v_min": -5.0,
-        "v_max": 135.0,
-        "hiddens": [128],
-        "exploration_config": {
+    'DQN'    : {
+        "v_min"                  : -5.0,
+        "v_max"                  : 135.0,
+        "hiddens"                : [128],
+        "exploration_config"     : {
             "epsilon_timesteps": 5000,
         },
-        'lr': 5e-5,
-        "num_atoms": 2,
-        "learning_starts": 100,
+        'lr'                     : 5e-5,
+        "num_atoms"              : 2,
+        "learning_starts"        : 100,
         "timesteps_per_iteration": 500
     },
-    'Apex': {
-        "v_min": -5.0,
-        "v_max": 135.0,
-        "hiddens": [128],
-        "exploration_config": {
+    'Apex'   : {
+        "v_min"                  : -5.0,
+        "v_max"                  : 135.0,
+        "hiddens"                : [128],
+        "exploration_config"     : {
             "epsilon_timesteps": 4000,
         },
-        'lr': 5e-5,
-        "num_atoms": 2,
-        "learning_starts": 100,
+        'lr'                     : 5e-5,
+        "num_atoms"              : 2,
+        "learning_starts"        : 100,
         "timesteps_per_iteration": 500
     },
-    'PPO' : {"vf_clip_param": 140.0},
-    'APPO' : {},
-    'Impala': {},
-    'SAC' : {
-        "Q_model": {
-            "fcnet_hiddens"     : [64,64],
+    'PPO'    : {"vf_clip_param": 140.0},
+    'APPO'   : {},
+    'Impala' : {},
+    'SAC'    : {
+        "Q_model"     : {
+            "fcnet_hiddens": [64, 64],
         },
         "policy_model": {
-            "fcnet_hiddens"     : [64,64],
+            "fcnet_hiddens": [64, 64],
         },
     },
     'SimpleQ': {
         "exploration_config": {
             "epsilon_timesteps": 5000
         },
-        "learning_starts": 100,
+        "learning_starts"   : 100,
     }
 }
-
 
 # Commands for remote inference mode.
 START_EPISODE = "START_EPISODE"
@@ -180,54 +252,98 @@ class DRLTrainer:
 
     def start_episode(self, episode_id: str = None, training_enabled: bool = True):
         return self._send({
-            "episode_id": episode_id,
-            "command": START_EPISODE,
+            "episode_id"      : episode_id,
+            "command"         : START_EPISODE,
             "training_enabled": training_enabled,
         })["episode_id"]
 
     def get_action(self, episode_id: str, observation: object):
         return self._send({
-            "command": GET_ACTION,
+            "command"    : GET_ACTION,
             "observation": observation,
-            "episode_id": episode_id,
+            "episode_id" : episode_id,
         })["action"]
 
     def log_action(self, episode_id: str, observation: object, action: object):
         self._send({
-            "command": LOG_ACTION,
+            "command"    : LOG_ACTION,
             "observation": observation,
-            "action": action,
-            "episode_id": episode_id,
+            "action"     : action,
+            "episode_id" : episode_id,
         })
 
     def log_returns(self, episode_id: str, reward: float, info=None):
         self._send({
-            "command": LOG_RETURNS,
-            "reward": reward,
-            "info": info,
+            "command"   : LOG_RETURNS,
+            "reward"    : reward,
+            "info"      : info,
             "episode_id": episode_id,
-            "done": None
+            "done"      : None
         })
 
     def end_episode(self, episode_id: str, observation: object):
         self._send({
-            "command": END_EPISODE,
+            "command"    : END_EPISODE,
             "observation": observation,
-            "episode_id": episode_id,
+            "episode_id" : episode_id,
         })
 
 
 if __name__ == "__main__":
 
+    def parametric(mkt_templates: dict):
+        l = [len(l) for l in mkt_templates.values()]
+        n = l[0]
+        for v in l[1:]:
+            if v != n:
+                return True
+        return False
+
+
+    base_config = {
+        "learning_starts": 100,
+        "v_min"          : min(MKT_REWARDS),
+        "v_max"          : max(MKT_REWARDS),
+
+    }
+
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    for model in ['SimpleQ','DQN']:
+    for mkt_template in [MKT_TEMPLATES1, MKT_TEMPLATES2]:
 
-        start_msg = {'action_space': json.dumps(ACTION_SPACE),
-                     'observation_space': json.dumps(OBSERVATION_SPACE),
-                     'model_type': model,
-                     'model_config': json.dumps(model_config[model])
+        model_config = base_config.copy()
+
+        max_action_size = max([len(options) for options in mkt_template.values()])
+        flat_observation_space_size = len(mkt_template.keys()) + len(MKT_REWARDS.keys()) + \
+                                      sum([len(l) for l in CUSTOMER_ATTRIBUTES.values()]) + \
+                                      sum([len(l) for l in CONTEXT_ATTRIBUTES.values()])
+
+        model_parametric = parametric(mkt_template)
+        if model_parametric:
+            observation_space = Space.box(0, 1, flat_observation_space_size)
+        else:
+            model_config.update({
+                "hiddens"           : [128],
+                "exploration_config": {
+                    "epsilon_timesteps": 4000,
+                },
+                'lr'                : 5e-5,
+                "num_atoms"         : 2,
+            })
+            real_obs_tuple = (Space.discrete(len(mkt_template.keys()) + len(MKT_REWARDS.keys())),)
+            real_obs_tuple += tuple((Space.discrete(len(l)) for l in CUSTOMER_ATTRIBUTES.values()))
+            real_obs_tuple += tuple((Space.discrete(len(l)) for l in CONTEXT_ATTRIBUTES.values()))
+            observation_space = Space.tuple(real_obs_tuple)
+
+        env_config.update({"mkt_offers": mkt_template})
+        world = MKTWorld(env_config)
+
+        start_msg = {'action_space'     : json.dumps(Space.discrete(max_action_size)),
+                     'observation_space': json.dumps(observation_space),
+                     'model_type'       : 'DQN',
+                     'model_parametric' : model_parametric,
+                     'model_config'     : json.dumps(model_config)
                      }
 
         msg = requests.post(START_TRAINER_URL, data=start_msg)
@@ -246,16 +362,15 @@ if __name__ == "__main__":
 
         trainer_id = msg['id']
         trainer_address = msg['address']
-        print("{} : {} Trainer Created with ID={}, and ADDRESS={}".
-              format(datetime.now(), model, trainer_id, trainer_address))
+        print("{} : Trainer Created with ID={}, and ADDRESS={}".
+              format(datetime.now(), trainer_id, trainer_address))
 
-        world = MKTWorld(env_config)
         drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
 
-        for i in range(30):  # 20
+        for i in range(10):  # 20
             count = 0
             total = 0
-            for _ in range(500):  # 500
+            for _ in range(1000):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
                 done = False
@@ -267,9 +382,8 @@ if __name__ == "__main__":
                 drl_trainer.end_episode(eid, obs)
                 count += 1
                 total += reward
-            print("{} : Model {} Iteration {} - Mean Reward = {}"
-                  .format(datetime.now(), model, i, total / count))
-
+            print("{} : Iteration {} - Mean Reward = {}"
+                  .format(datetime.now(), i, total / count))
 
         print("{} : Stop Trainer ID={}".format(datetime.now(), trainer_id))
 
