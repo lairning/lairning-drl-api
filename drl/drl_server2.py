@@ -155,7 +155,7 @@ def drl_trainer(
                 {"model": {"custom_model": "ParametricActionsModel"}
             })
         else:
-            register_env("srv", lambda _: MKTWorld(action_space, observation_space))
+            register_env("env", lambda _: MKTWorld(action_space, observation_space))
 
         drl = trainers[model_type](
             env="env",
