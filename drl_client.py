@@ -296,8 +296,8 @@ if __name__ == "__main__":
         n = l[0]
         for v in l[1:]:
             if v != n:
-                return True
-        return False
+                return 1
+        return 0
 
 
     base_config = {
