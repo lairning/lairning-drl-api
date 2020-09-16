@@ -62,8 +62,8 @@ class MKTWorld:
         #self.customer_segments = list(itertools.product(*self.customer_values))
         #self.customer_segment = self.customer_segments[0]
 
-        self.features = config["customer_attributes"].keys() + config["context_attributes"].keys()
-        self.values = list(config["customer_attributes"].values() + config["context_attributes"].values())
+        self.features = list(config["customer_attributes"].keys()) + list(config["context_attributes"].keys())
+        self.values = list(config["customer_attributes"].values()) + list(config["context_attributes"].values())
         self.segments = list(itertools.product(*self.values))
         self.segment = self.segments[0]
 
