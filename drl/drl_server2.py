@@ -83,7 +83,7 @@ class ParametricActionsModel(DistributionalQTFModel):
     def value_function(self):
         return self.action_param_model.value_function()
 
-model_config = {
+parametric_model_config = {
     'DQN' : {
         "input_evaluation": [],
         "hiddens": [],
@@ -113,6 +113,7 @@ def drl_trainer(
         action_space: Discrete,
         observation_space: Box,
         model_type: str,
+        model_parametric: bool,
         drl_config: dict,
         q: Queue):
     # Replace file descriptors for stdin, stdout, and stderr
@@ -128,24 +129,24 @@ def drl_trainer(
         with open(stderr, 'ab', 0) as f:
             os.dup2(f.fileno(), sys.stderr.fileno())
 
+        assert model_type in parametric_model_config.keys(), "Model Type {} not in Configs {}".format(model_type,                                                                                                  parametric_model_config.keys())
+        assert model_type in trainers.keys(), "Model Type {} not in Trainers {}".format(model_type, trainers.keys())
+
         ray.init()
 
         register_env("env", lambda _: ParametricMKTWorld(action_space, observation_space))
 
-        ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
-
-        assert model_type in model_config.keys(), "Model Type {} not in Configs {}".format(model_type,
-                                                                                         model_config.keys())
-        assert model_type in trainers.keys(), "Model Type {} not in Trainers {}".format(model_type, trainers.keys())
-
-        drl_config.update(model_config[model_type])
         drl_config.update(
             {"input": (lambda ioctx: PolicyServerInput(ioctx, SERVER_ADDRESS, input_port)),
-             "model": {"custom_model": "ParametricActionsModel"},
              "num_workers": 0,
-             "input_evaluation": []
-        })
+             "input_evaluation": []})
 
+        if model_parametric:
+            ModelCatalog.register_custom_model("ParametricActionsModel", ParametricActionsModel)
+            drl_config.update(parametric_model_config[model_type])
+            drl_config.update(
+                {"model": {"custom_model": "ParametricActionsModel"}
+            })
 
         drl = trainers[model_type](
             env="env",
@@ -184,6 +185,15 @@ def drl_trainer(
             print(e)
         i += 1
 
+def myspace2gymspace(space: dict):
+    if space['type'] == 'Discrete':
+        return Discrete(space['value'])
+    if space['type'] == 'Tuple':
+        return Tuple(tuple(myspace2gymspace(s) for s in space['value']))
+    if space['type'] == 'Box':
+        return Box(low=space['low'], high=space['high'], shape=(space['size'],), dtype=np.int64)
+    raise "Invalid Space Type = {}".format(space['type'])
+
 class DRLServer:
     def __init__(self):
         self.trainer_id = 1
@@ -195,8 +205,8 @@ class DRLServer:
         # Log file fo the new DRL Trainer
         trainer_log_file = '/tmp/drltrainer_{}_{:%Y-%m-%d_%H:%M:%S%f}.log'.format(self.trainer_id, datetime.now())
         try:
-            action_space = Discrete(payload['action_space_size'])
-            observation_space = Box(low=0, high=1, shape=(payload['observation_space_size'],), dtype=np.int64)
+            action_space = myspace2gymspace(payload['action_space'])
+            observation_space = myspace2gymspace(payload['observation_space'])
         except Exception as err:
             print("{} : [ERROR CREATING GYM SPACES] {}}"
                   .format(datetime.now(), err))
@@ -208,6 +218,7 @@ class DRLServer:
             action_space,
             observation_space,
             payload['model_type'],
+            payload['model_parametric'],
             payload['model_config'],
             self.queue
         )
