@@ -320,8 +320,12 @@ if __name__ == "__main__":
                                       sum([len(l) for l in CONTEXT_ATTRIBUTES.values()])
 
         model_parametric = parametric(mkt_template)
+
+        env_config.update({"mkt_offers": mkt_template})
+
         if model_parametric:
             observation_space = Space.box(0, 1, flat_observation_space_size)
+            world = MKTWorldParametric(env_config)
         else:
             model_config.update({
                 "hiddens"           : [128],
@@ -335,9 +339,7 @@ if __name__ == "__main__":
             real_obs_tuple += tuple((Space.discrete(len(l)) for l in CUSTOMER_ATTRIBUTES.values()))
             real_obs_tuple += tuple((Space.discrete(len(l)) for l in CONTEXT_ATTRIBUTES.values()))
             observation_space = Space.tuple(real_obs_tuple)
-
-        env_config.update({"mkt_offers": mkt_template})
-        world = MKTWorld(env_config)
+            world = MKTWorld(env_config)
 
         start_msg = {'action_space'     : json.dumps(Space.discrete(max_action_size)),
                      'observation_space': json.dumps(observation_space),
