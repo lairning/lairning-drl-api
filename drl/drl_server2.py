@@ -49,11 +49,11 @@ class ParametricActionsModel(DistributionalQTFModel):
                  name,
                  **kw):
 
+        print("{} : [DEBUG] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}, Model Config={}"
+              .format(datetime.now(), action_space, obs_space, num_outputs, name, model_config))
+
         super(ParametricActionsModel, self).__init__(
             obs_space, action_space, num_outputs, model_config, name, **kw)
-
-        print("{} : [DEBUG] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}"
-             .format(datetime.now(),action_space, obs_space, num_outputs, name))
 
         model_observation_space = Box(low=0, high=1, shape=(obs_space.shape[0]-action_space.n,))
 
