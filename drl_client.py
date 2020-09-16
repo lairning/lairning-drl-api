@@ -302,8 +302,8 @@ if __name__ == "__main__":
 
     base_config = {
         "learning_starts": 100,
-        "v_min"          : min(MKT_REWARDS),
-        "v_max"          : max(MKT_REWARDS),
+        "v_min"          : min(MKT_REWARDS.values()),
+        "v_max"          : max(MKT_REWARDS.values()),
 
     }
 
