@@ -13,8 +13,8 @@ class DRLServerStart(Resource):
     @inject
     def __init__(self, drl_server: DRLServer):
         self.args = reqparse.RequestParser()
-        self.args.add_argument("action_space_size", type = int)
-        self.args.add_argument("observation_space_size", type = int)
+        self.args.add_argument("action_space")
+        self.args.add_argument("observation_space")
         self.args.add_argument("model_type", type = str)
         self.args.add_argument("model_parametric", type = bool)
         self.args.add_argument("model_config")
@@ -28,8 +28,8 @@ class DRLServerStart(Resource):
         try:
             args = self.args.parse_args()
             payload = {
-                "action_space_size": args.action_space_size,
-                "observation_space_size": args.observation_space_size,
+                "action_space": args.action_space,
+                "observation_space": args.observation_space,
                 "model_type": args.model_type,
                 "model_parametric": args.model_parametric,
                 "model_config": json.loads(args.model_config)
