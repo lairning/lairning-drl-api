@@ -232,7 +232,6 @@ END_EPISODE = "END_EPISODE"
 
 class DRLTrainer:
     def __init__(self, trainer_id: int, trainer_address: str):
-        self.id = trainer_id
         self.address = trainer_address
 
     def _send(self, data):
@@ -287,6 +286,48 @@ class DRLTrainer:
             "episode_id" : episode_id,
         })
 
+
+class DRLTrainerDebug:
+    def __init__(self):
+        self.episode_id = 0
+
+    def _print(self, data):
+        print("TrainerDEBUG {}:{}".format(self.episode_id,data))
+
+    def start_episode(self, episode_id: str = None, training_enabled: bool = True):
+        self.episode_id += 1
+        self._print({
+            "command"         : START_EPISODE,
+        })
+        return self.episode_id
+
+    def get_action(self, episode_id: str, observation: object):
+        action = np.argmax([np.random.rand()*mask for mask in observation['action_mask']])
+        self._print({
+            "command"    : GET_ACTION,
+            "observation": observation,
+            "action" : action,
+        })
+        return action
+
+    def log_action(self, episode_id: str, observation: object, action: object):
+        self._send({
+            "command"    : LOG_ACTION,
+            "observation": observation,
+            "action"     : action,
+        })
+
+    def log_returns(self, episode_id: str, reward: float, info=None):
+        self._print({
+            "command"   : LOG_RETURNS,
+            "reward"    : reward
+        })
+
+    def end_episode(self, episode_id: str, observation: object):
+        self._print({
+            "command"    : END_EPISODE,
+            "observation": observation,
+        })
 
 if __name__ == "__main__":
 
@@ -350,6 +391,7 @@ if __name__ == "__main__":
         print("{} : Start Message = {}".
               format(datetime.now(), start_msg))
 
+        '''
         msg = requests.post(START_TRAINER_URL, data=start_msg)
 
         if msg.status_code != 200:
@@ -369,12 +411,14 @@ if __name__ == "__main__":
         print("{} : Trainer Created with ID={}, and ADDRESS={}".
               format(datetime.now(), trainer_id, trainer_address))
 
-        drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
+        '''
+        # drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
+        drl_trainer = DRLTrainerDebug()
 
-        for i in range(10):  # 20
+        for i in range(2):  # 20
             count = 0
             total = 0
-            for _ in range(1000):  # 500
+            for _ in range(10):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
                 done = False
