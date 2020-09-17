@@ -163,6 +163,7 @@ class MKTWorldParametric(MKTWorld):
 
     def reset(self):
         observation = super().reset()
+        print("MKTWorld:",observation)
         return {'action_mask': self.action_mask[0], 'state': self.flat.observation(observation)}
 
     def step(self, action: int):
