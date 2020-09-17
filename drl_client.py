@@ -295,7 +295,8 @@ class DRLTrainerDebug:
         self.episode_id = 0
 
     def _print(self, data):
-        print("TrainerDEBUG {}:{}".format(self.episode_id,data))
+        pass
+        # print("TrainerDEBUG {}:{}".format(self.episode_id,data))
 
     def start_episode(self, episode_id: str = None, training_enabled: bool = True):
         self.episode_id += 1
