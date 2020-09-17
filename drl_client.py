@@ -310,7 +310,7 @@ if __name__ == "__main__":
     START_TRAINER_URL = 'http://localhost:5002/v1/drl/server/start'
     STOP_TRAINER_URL = 'http://localhost:5002/v1/drl/server/stop'
 
-    for mkt_template in [MKT_TEMPLATES2]:
+    for mkt_template in [MKT_TEMPLATES1, MKT_TEMPLATES2]:
 
         model_config = base_config.copy()
 
@@ -375,7 +375,7 @@ if __name__ == "__main__":
         for i in range(10):  # 20
             count = 0
             total = 0
-            for _ in range(500):  # 500
+            for _ in range(1000):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
                 done = False
