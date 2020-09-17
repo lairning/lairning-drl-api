@@ -153,7 +153,7 @@ def _get_action_mask(actions: list, max_actions: int):
 class MKTWorldParametric(MKTWorld):
     def __init__(self, config):
         super(MKTWorldParametric, self).__init__(config)
-        self.max_action_size = max([len(options) for options in self.mkt_offers])
+        self.max_action_size = max([len(options) for options in self.mkt_offers.values()])
         self.action_mask = {tp_id: _get_action_mask(self.mkt_offers[tp], max_action_size) for tp_id, tp
                             in enumerate(self.mkt_offers.keys())}
         real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
