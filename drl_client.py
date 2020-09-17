@@ -158,6 +158,7 @@ class MKTWorldParametric(MKTWorld):
                             in enumerate(self.mkt_offers.keys())}
         real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
         real_obs_tuple += tuple((Discrete(len(l)) for l in self.values))
+        print("MKTWorldParametric",real_obs_tuple)
         self.flat = FlattenObservation(MKTEnv(real_observation_space=Tuple(real_obs_tuple),
                                               max_action_size=self.max_action_size))
 
