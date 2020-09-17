@@ -158,20 +158,20 @@ class MKTWorldParametric(MKTWorld):
                             in enumerate(self.mkt_offers.keys())}
         real_obs_tuple = (Discrete(len(self.mkt_offers.keys()) + len(self.rewards.keys())),)
         real_obs_tuple += tuple((Discrete(len(l)) for l in self.values))
-        print("MKTWorldParametric",real_obs_tuple)
+        #print("MKTWorldParametric",real_obs_tuple)
         self.flat = FlattenObservation(MKTEnv(real_observation_space=Tuple(real_obs_tuple),
                                               max_action_size=self.max_action_size))
 
     def reset(self):
         observation = super().reset()
-        print("RESET:",observation)
+        #print("RESET:",observation)
         return {'action_mask': self.action_mask[0], 'state': self.flat.observation(observation)}
 
     def step(self, action: int):
         observation, reward, done, info = super().step(action)
         msg = {'action_mask': self.action_mask[observation[0]] if not done else [1] * self.max_action_size,
                 'state'      : self.flat.observation(observation)}, reward, done, info
-        print("STEP:", observation,msg)
+        #print("STEP:", observation,msg)
         return msg
 
 env_config = {
@@ -289,50 +289,6 @@ class DRLTrainer:
             "episode_id" : episode_id,
         })
 
-
-class DRLTrainerDebug:
-    def __init__(self):
-        self.episode_id = 0
-
-    def _print(self, data):
-        pass
-        # print("TrainerDEBUG {}:{}".format(self.episode_id,data))
-
-    def start_episode(self, episode_id: str = None, training_enabled: bool = True):
-        self.episode_id += 1
-        self._print({
-            "command"         : START_EPISODE,
-        })
-        return self.episode_id
-
-    def get_action(self, episode_id: str, observation: object):
-        action = np.argmax([np.random.rand()*mask for mask in observation['action_mask']])
-        self._print({
-            "command"    : GET_ACTION,
-            "observation": observation,
-            "action" : action,
-        })
-        return action
-
-    def log_action(self, episode_id: str, observation: object, action: object):
-        self._send({
-            "command"    : LOG_ACTION,
-            "observation": observation,
-            "action"     : action,
-        })
-
-    def log_returns(self, episode_id: str, reward: float, info=None):
-        self._print({
-            "command"   : LOG_RETURNS,
-            "reward"    : reward
-        })
-
-    def end_episode(self, episode_id: str, observation: object):
-        self._print({
-            "command"    : END_EPISODE,
-            "observation": observation,
-        })
-
 if __name__ == "__main__":
 
     def parametric(mkt_templates: dict):
@@ -395,7 +351,6 @@ if __name__ == "__main__":
         print("{} : Start Message = {}".
               format(datetime.now(), start_msg))
 
-        '''
         msg = requests.post(START_TRAINER_URL, data=start_msg)
 
         if msg.status_code != 200:
@@ -415,14 +370,12 @@ if __name__ == "__main__":
         print("{} : Trainer Created with ID={}, and ADDRESS={}".
               format(datetime.now(), trainer_id, trainer_address))
 
-        '''
-        # drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
-        drl_trainer = DRLTrainerDebug()
+        drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
 
-        for i in range(1):  # 20
+        for i in range(10):  # 20
             count = 0
             total = 0
-            for _ in range(5):  # 500
+            for _ in range(500):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
                 done = False
