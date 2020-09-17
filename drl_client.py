@@ -163,14 +163,15 @@ class MKTWorldParametric(MKTWorld):
 
     def reset(self):
         observation = super().reset()
-        print("MKTWorld:",observation)
+        print("RESET:",observation)
         return {'action_mask': self.action_mask[0], 'state': self.flat.observation(observation)}
 
     def step(self, action: int):
         observation, reward, done, info = super().step(action)
-        return {'action_mask': self.action_mask[observation[0]] if not done else [1] * self.max_action_size,
+        msg = {'action_mask': self.action_mask[observation[0]] if not done else [1] * self.max_action_size,
                 'state'      : self.flat.observation(observation)}, reward, done, info
-
+        print("STEP:", observation,msg)
+        return msg
 
 env_config = {
     "mkt_rewards"        : MKT_REWARDS,
@@ -416,10 +417,10 @@ if __name__ == "__main__":
         # drl_trainer = DRLTrainer(trainer_id=trainer_id, trainer_address=trainer_address)
         drl_trainer = DRLTrainerDebug()
 
-        for i in range(2):  # 20
+        for i in range(1):  # 20
             count = 0
             total = 0
-            for _ in range(10):  # 500
+            for _ in range(5):  # 500
                 eid = drl_trainer.start_episode(training_enabled=True)
                 obs = world.reset()
                 done = False
