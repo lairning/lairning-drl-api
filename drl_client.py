@@ -348,8 +348,8 @@ if __name__ == "__main__":
                      'model_config'     : json.dumps(model_config)
                      }
 
-        print("{} : Start Message = {}".
-              format(datetime.now(), start_msg))
+        # print("{} : Start Message = {}".
+        #      format(datetime.now(), start_msg))
 
         msg = requests.post(START_TRAINER_URL, data=start_msg)
 
