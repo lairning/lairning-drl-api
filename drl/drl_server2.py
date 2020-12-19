@@ -54,16 +54,16 @@ class ParametricActionsModel(DistributionalQTFModel):
                  name,
                  **kw):
 
-        print("{} : [DEBUG] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}, Model Config={}"
-            .format(datetime.now(), action_space, obs_space, num_outputs, name, model_config))
+        # print("{} : [DEBUG] ParametricActionsModel ActS={}, ObsS={}, NOut={}, Name={}, Model Config={}"
+        #     .format(datetime.now(), action_space, obs_space, num_outputs, name, model_config))
 
         super(ParametricActionsModel, self).__init__(
             obs_space, action_space, num_outputs, model_config, name, **kw)
 
         model_observation_space = Box(low=0, high=1, shape=(obs_space.shape[0]-action_space.n,))
 
-        print("{} : [DEBUG] ParametricActionsModel model_observation_space = {}"
-            .format(datetime.now(), model_observation_space))
+        # print("{} : [DEBUG] ParametricActionsModel model_observation_space = {}"
+        #    .format(datetime.now(), model_observation_space))
 
         self.action_param_model = FullyConnectedNetwork(
             model_observation_space, action_space, num_outputs,
@@ -137,8 +137,8 @@ def drl_trainer(
         assert model_type in parametric_model_config.keys(), "Model Type {} not in Configs {}".format(model_type,                                                                                                  parametric_model_config.keys())
         assert model_type in trainers.keys(), "Model Type {} not in Trainers {}".format(model_type, trainers.keys())
 
-        print("{} : [DEBUG] drl_trainer ActS={}, ObsS={}, MType={}, Parametric={}, Model Config={}"
-              .format(datetime.now(), action_space, observation_space, model_type, model_parametric, drl_config))
+        # print("{} : [DEBUG] drl_trainer ActS={}, ObsS={}, MType={}, Parametric={}, Model Config={}"
+        #       .format(datetime.now(), action_space, observation_space, model_type, model_parametric, drl_config))
 
         ray.init()
 
@@ -221,8 +221,11 @@ class DRLServer:
                   .format(datetime.now(), err))
             return {'status': False, 'error': err}
 
-        print("{} : DEBUG DRLServer observation_space {}"
-              .format(datetime.now(), payload))
+        # print("{} : DEBUG DRLServer observation_space before {}"
+        #       .format(datetime.now(), payload['observation_space']))
+
+        # print("{} : DEBUG DRLServer observation_space before {}"
+        #       .format(datetime.now(), observation_space))
 
         drl_trainer_args = (
             trainer_log_file,
