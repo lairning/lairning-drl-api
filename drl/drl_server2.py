@@ -221,11 +221,10 @@ class DRLServer:
                   .format(datetime.now(), err))
             return {'status': False, 'error': err}
 
-        # print("{} : DEBUG DRLServer observation_space before {}"
-        #       .format(datetime.now(), payload['observation_space']))
-
-        # print("{} : DEBUG DRLServer observation_space before {}"
-        #       .format(datetime.now(), observation_space))
+        print("{} : DEBUG DRLServer observation_space before {}"
+               .format(datetime.now(), payload['observation_space']))
+        print("{} : DEBUG DRLServer observation_space after {}"
+               .format(datetime.now(), observation_space))
 
         drl_trainer_args = (
             trainer_log_file,
@@ -239,6 +238,8 @@ class DRLServer:
         )
         print("{} : [INFO] DRL Server is about to start a new DRL Trainer"
               .format(datetime.now()))
+
+
 
         try:
             trainer = Process(target=drl_trainer, args=drl_trainer_args)
